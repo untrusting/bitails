@@ -7,6 +7,15 @@ https://bitails.net/
 
 https://docs.bitails.net/
 
+
+The Swagger is available for both main net and test net.
+
+Main net: https://api.bitails.net/swagger
+
+Test net: https://test-api.bitails.net/swagger
+
+
+
 ## Install
 
 ---
