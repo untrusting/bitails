@@ -72,6 +72,10 @@ const explorer = new bitails("test");
 
 	utxos ( address )
 
+	detailScriptHash ( scriptHash )
+
+	balanceScriptHash ( scriptHash )
+
 	historyByScriptHash ( scriptHash )
 
 	utxosByScriptHash ( scriptHash )
@@ -321,9 +325,62 @@ explorer.utxos( address ).then((historial)=>{
 <h2>Resupuesta:</h2>
 <div id="utxos" class="code"></div>
 
+<hr>
+<h2>Detalles de un scriptHash</h2>
+<h3>explorer.detailsScriptHash( scriptHash )</h3>
+<textarea  class="code">
+explorer.detailsScriptHash( scriptHash ).then((detailsScriptHash)=>{
+	console.log(detailsScriptHash)
+	document.getElementById("detailsScriptHash").innerText=JSON.stringify(detailsScriptHash, null, '\t')
+
+})
+</textarea>   
+<h2>Resupuesta:</h2>
+<div id="detailsScriptHash" class="code"></div>
+
 
 <hr>
-<h2>Buscar un texto</h2>
+<h2>Historial de un scriptHash</h2>
+<h3>explorer.historyByScriptHash( scriptHash )</h3>
+<textarea  class="code">
+explorer.historyByScriptHash( scriptHash ).then((historialScriptHash)=>{
+	console.log(historialScriptHash)
+	document.getElementById("historialScriptHash").innerText=JSON.stringify(historialScriptHash, null, '\t')
+
+})
+</textarea>   
+<h2>Resupuesta:</h2>
+<div id="scriptHashHistorial" class="code"></div>
+
+<hr>
+<h2>Utxos de un scriptHash</h2>
+<h3>explorer.utxosByScriptHash( scriptHash )</h3>
+<textarea  class="code">
+explorer.utxosByScriptHash( scriptHash ).then((utxosByScriptHash)=>{
+	console.log(utxosByScriptHash)
+	document.getElementById("utxosByScriptHash").innerText=JSON.stringify(utxosByScriptHash, null, '\t')
+
+})
+</textarea>   
+<h2>Resupuesta:</h2>
+<div id="utxosByScriptHash" class="code"></div>
+
+<hr>
+<h2>Balance de un scriptHash</h2>
+<h3>explorer.balanceScriptHash( scriptHash )</h3>
+<textarea  class="code">
+explorer.balanceScriptHash( scriptHash ).then((balanceScriptHash)=>{
+	console.log(balanceScriptHash)
+	document.getElementById("balanceScriptHash").innerText=JSON.stringify(balanceScriptHash, null, '\t')
+
+})
+</textarea>   
+<h2>Resupuesta:</h2>
+<div id="balanceScriptHash" class="code"></div>
+
+<!--//
+<hr>
+<h2>Buscar un texto e identifica si es direccion, transaccion, opCode, sigHash</h2>
 <h3>explorer.search( texto )</h3>
 <textarea  class="code">
 explorer.search( text ).then((result)=>{
@@ -334,11 +391,12 @@ explorer.search( text ).then((result)=>{
 </textarea>   
 <h2>Resupuesta:</h2>
 <div id="results" class="code"></div>
-
+//-->
     <!--//<script type="text/javascript" src="https://bsv.direct/lib/bitails/index.js"></script>
     <script type="text/javascript" src="./bitails.browser.js"></script>//-->
     <script type="text/javascript">
     const mainAddress = "16Rcy7RYM3xkPEJr4tvUtL485Fuobi8S7o"
+    const mainScriptHash = "0c03b02d68a3590137b2cd8eed603009c809de8f5f0c72dded16e49f377c71e0"
 
 window.onload=function(){
     const mainex = new bitails("main");
@@ -436,11 +494,33 @@ window.onload=function(){
 		document.getElementById("utxos").innerText=JSON.stringify(utxos, null, '\t')
 	})
 
+	mainex.detailsScriptHash(mainScriptHash).then((detailsScriptHash)=>{
+		console.log(detailsScriptHash)
+		document.getElementById("detailsScriptHash").innerText=JSON.stringify(detailsScriptHash, null, '\t')
+	})
 
-	mainex.search("Craig").then((results)=>{
+	mainex.historyByScriptHash(mainScriptHash).then((scriptHashHistorial)=>{
+		console.log(scriptHashHistorial)
+		document.getElementById("scriptHashHistorial").innerText=JSON.stringify(scriptHashHistorial, null, '\t')
+	})
+
+	mainex.utxosByScriptHash(mainScriptHash).then((utxosByScriptHash)=>{
+		console.log(utxosByScriptHash)
+		document.getElementById("utxosByScriptHash").innerText=JSON.stringify(utxosByScriptHash, null, '\t')
+	})
+	
+	mainex.balanceScriptHash(mainScriptHash).then((balanceSH)=>{
+		console.log(balanceSH)
+		document.getElementById("balanceScriptHash").innerText=JSON.stringify(balanceSH, null, '\t')
+	})
+	
+/*
+	mainex.search(mainAddress+"type=all&from=0&limit=10").then((results)=>{
 		console.log(results)
 		document.getElementById("results").innerText=JSON.stringify(results, null, '\t')
 	})
+*/
+
 }
 
 </script>

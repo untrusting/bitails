@@ -372,8 +372,19 @@ class Bitails {
     return this._get( `https://${this._network}.Bitails.com/statement/${address}` )
   }
 */
+  /**
+   * Get scriptHash information
+   * This endpoint retrieves information abut ScriptHash
+   * https://docs.bitails.net/#get-details-of-scripthash
+   * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
+   */
+  detailsScriptHash ( scriptHash ) {
+    return this._get( `scripthash/${scriptHash}/details` )
+  }
 
-
+  balanceScriptHash ( scriptHash ) {
+    return this._get( `scripthash/${scriptHash}/balance` )
+  }
   /**
    * Get script history
    * This endpoint retrieves confirmed and unconfirmed script transactions.
@@ -381,7 +392,7 @@ class Bitails {
    * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
    */
   historyByScriptHash ( scriptHash ) {
-    return this._get( `script/${scriptHash}/history` )
+    return this._get( `scripthash/${scriptHash}/history` )
   }
 
   /**
@@ -391,7 +402,7 @@ class Bitails {
    * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
    */
   utxosByScriptHash ( scriptHash ) {
-    return this._get( `script/${scriptHash}/unspent` )
+    return this._get( `scripthash/${scriptHash}/unspent` )
   }
 
   /**
