@@ -1,11 +1,11 @@
 # A Bitails API JS Wrapper library for Bitcoin SV Developer
 
 
-https://whatsonchain.com/
+https://bitails.net/
 
 ## Documentation
 
-https://developers.whatsonchain.com/
+https://docs.bitails.net/
 
 ## Install
 
