@@ -382,13 +382,19 @@ class Bitails {
     return this._get( `scripthash/${scriptHash}/details` )
   }
 
+  /**
+   * Get balance of  scriptHash
+   * This endpoint retrieves balace if ScriptHash
+   * https://docs.bitails.net/#get-balance-of-scripthash
+   * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
+   */
   balanceScriptHash ( scriptHash ) {
     return this._get( `scripthash/${scriptHash}/balance` )
   }
   /**
-   * Get script history
+   * Get scriptHash history
    * This endpoint retrieves confirmed and unconfirmed script transactions.
-   * https://docs.bitails.net/#script
+   * https://docs.bitails.net/#get-history-of-scripthash
    * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
    */
   historyByScriptHash ( scriptHash ) {
@@ -396,22 +402,13 @@ class Bitails {
   }
 
   /**
-   * Get script unspent transactions
+   * Get scriptHash unspent transactions
    * This endpoint retrieves ordered list of UTXOs.
    * https://docs.bitails.net/#get-script-unspent-transactions
    * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
    */
   utxosByScriptHash ( scriptHash ) {
     return this._get( `scripthash/${scriptHash}/unspent` )
-  }
-
-  /**
-   * Get exchange rate
-   * This endpoint provides exchange rate for BSV.
-   * https://docs.bitails.net/#exchange-rate
-   */
-  exchangeRate () {
-    return this._get( `https://bsv.direct/precios/api/` )
   }
 
 
