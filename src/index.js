@@ -178,7 +178,7 @@ class Bitails {
    * This endpoint retrieves last 10 block headers.
    */
   blockTransactions ( hash ) {
-    return this._get( 'block/${hash}/transactions' )
+    return this._get( `block/${hash}/transactions` )
   }
 
 
