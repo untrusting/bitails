@@ -40,7 +40,7 @@ class Bitails {
     } else {
       //Up to 3 requests/sec.
       // https://docs.bitails.net/#rate-limits
-      throttleOpt[ 'threshold' ] = 6000 //(1000/3)
+      throttleOpt[ 'threshold' ] = 0 //(1000/3)
     }
     
     if (this._network=="test"){ API_TESTNET="test-"; }
@@ -397,8 +397,15 @@ class Bitails {
    * https://docs.bitails.net/#get-history-of-scripthash
    * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
    */
-  historyByScriptHash ( scriptHash ) {
-    return this._get( `scripthash/${scriptHash}/history` )
+  historyByScriptHash ( scriptHash,pgkey="", limit=5000 ) {
+    let pgkeyParam
+    if (pgkey!=""){
+      pgkeyParam=`pgkey=${pgkey}&`
+    }else{
+      pgkeyParam=""
+    }
+    console.log(`scripthash/${scriptHash}/history?${pgkeyParam}limit=${limit}`)
+    return this._get( `scripthash/${scriptHash}/history?${pgkeyParam}limit=${limit}` )
   }
 
   /**
