@@ -1,10 +1,14 @@
+const Buffer = require("buffer")
 const axios = require( "axios" );
 const { cacheAdapterEnhancer, throttleAdapterEnhancer } = require( 'axios-extensions' )
 let API_PROTO ="https://"
-let API_ROOT = "api.bitails.net"
-let API_TESTNET = ""
+//let API_ROOT = "api.bitails.net"
+let API_ROOT = "api.bsv.direct/e2"
+let API_MAIN = "api.bsv.direct/e2"
 
-class Bitails {
+let API_TESTNET = "api.bsv.direct/test/e2"
+
+class Explorer {
   /**
    * Bitails API Wrapper
    * @param {string} network Selected network: main , test or TODO:stn
@@ -40,13 +44,12 @@ class Bitails {
     } else {
       //Up to 3 requests/sec.
       // https://docs.bitails.net/#rate-limits
-      throttleOpt[ 'threshold' ] = 0 //(1000/3)
+      throttleOpt[ 'threshold' ] = 333 //(1000/3)
     }
     
-    if (this._network=="test"){ API_TESTNET="test-"; }
-    console.log(`${API_PROTO}${API_TESTNET}${API_ROOT}/`)
+    if (this._network=="test"){ API_ROOT = API_TESTNET; }else{ API_ROOT = API_MAIN;   }
     this._httpClient = axios.create( {
-      baseURL: `${API_PROTO}${API_TESTNET}${API_ROOT}/`,
+      baseURL: `${API_PROTO}${API_ROOT}/`,
       timeout: this._timeout,
       headers,
       adapter: throttleAdapterEnhancer( cacheAdapterEnhancer( axios.defaults.adapter, cacheOpt ), throttleOpt )
@@ -65,7 +68,7 @@ class Bitails {
       // console.warn( error.response.data )
       // console.warn( error.response.status )
       // console.warn( error.response.headers )
-      throw new Error( error.response.data )
+      throw new Error( JSON.stringify(error.response.data ) )
     } else if ( error.request ) {
       // console.warn( error.message )
       throw new Error( error.message )
@@ -82,7 +85,6 @@ class Bitails {
     const options = {
       params
     }
-
     return this._httpClient.get( command, options )
       .then( this._parseResponse )
       .catch( this._parseError )
@@ -100,6 +102,18 @@ class Bitails {
       .catch( this._parseError )
   }
 
+  _postBinary ( command, data ) {
+        const formData = new FormData();
+            formData.append("raw", new Blob([ data ]), 'raw');
+            const options = {
+                method: 'POST',
+                body: formData
+            };
+
+    return this._httpClient.post( command, data, options )
+      .then( this._parseResponse )
+      .catch( this._parseError )
+  }
   /**
    * Get api status
    * Simple endpoint to show API server is up and running
@@ -200,7 +214,8 @@ class Bitails {
    * @param {string} hash The hash/txId of the transaction to retrieve
    */
   downloadTx ( hash ) {
-    return this._get( `download/tx/${hash}` )
+   
+    return this._get( `download/tx/${hash}`, {responseType: 'arraybuffer'});
   }
   /**
    * Download specific transaction output
@@ -220,9 +235,14 @@ class Bitails {
    */
   broadcast ( txhex ) {
     return this._post( 'tx/broadcast', {
-      raw
+      raw: txhex
     } )
   }
+
+  broadcastBinary ( txBuf ) {
+    return this._post( 'tx/broadcast/multipart', txBuf )
+  }
+
 
 
   /**
@@ -347,8 +367,11 @@ class Bitails {
    * https://docs.bitails.net/#get-history
    * @param {string} address 
    */
-  history ( address ) {
-    return this._get( `address/${address}/history` )
+  history ( address, pgkey="", limit=100 ) {
+    let pgkeyParam=""
+        if (pgkey!=""){  pgkeyParam=`pgkey=${pgkey}&`; }else{  pgkeyParam="";  }
+
+    return this._get( `address/${address}/history?${pgkeyParam}limit=${limit}` )
   }
 
   /**
@@ -357,8 +380,9 @@ class Bitails {
    * https://docs.bitails.net/#get-unspent-transactions
    * @param {string} address 
    */
-  utxos ( address ) {
-    return this._get( `address/${address}/unspent` )
+  utxos ( address, from=0, limit=100 ) {
+
+    return this._get( `address/${address}/unspent?from=${from}&limit=${limit}` )
   }
 
 
@@ -399,12 +423,8 @@ class Bitails {
    */
   historyByScriptHash ( scriptHash,pgkey="", limit=5000 ) {
     let pgkeyParam
-    if (pgkey!=""){
-      pgkeyParam=`pgkey=${pgkey}&`
-    }else{
-      pgkeyParam=""
-    }
-    console.log(`scripthash/${scriptHash}/history?${pgkeyParam}limit=${limit}`)
+    if (pgkey!=""){  pgkeyParam=`pgkey=${pgkey}&`; }else{  pgkeyParam="";  }
+
     return this._get( `scripthash/${scriptHash}/history?${pgkeyParam}limit=${limit}` )
   }
 
@@ -466,4 +486,4 @@ class Bitails {
   }
 }
 
-module.exports = Bitails
+module.exports = Explorer

@@ -3,19 +3,19 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Test Bitails</title>
-    	<script type="text/javascript" src="https://bsv.direct/lib/bitails/index.js"></script>	
+    <title>Test Explorer APIs</title>
+    	<script type="text/javascript" src="https://bsv.direct/lib/explorer.js"></script>	
 
 </head>
 
 <body>
-	<h1>Bitails API Wrapper</h1>
+	<h1>BSV.Direct Explorer API Wrapper</h1>
 <h2>Incluye esto en el header del documento HTML</h2>
 
 <textarea class="code">
 <head>
 //.....	
-	<script type="text/javascript" src="https://bsv.direct/lib/bitails/index.js"></script>	
+	<script type="text/javascript" src="https://bsv.direct/lib/explorer.js"></script>	
 //.....
 </head>
 </textarea>
@@ -23,10 +23,10 @@
 <h2>Inicialización</h2>
 <textarea id="networkStatus_code" class="code">
 // Para Mainnet
-const explorer = new bitails("main");
+const explorer = new Explorer("main");
 
 // o para Testnet
-const explorer = new bitails("test");
+const explorer = new Explorer("test");
 
 </textarea>
 
@@ -399,7 +399,7 @@ explorer.search( text ).then((result)=>{
     const mainScriptHash = "0c03b02d68a3590137b2cd8eed603009c809de8f5f0c72dded16e49f377c71e0"
 
 window.onload=function(){
-    const mainex = new bitails("main");
+    const mainex = new Explorer("main");
 
     function networkMain(explorer, cb) {
         let stats = explorer.status().then((estadisticas) => {
