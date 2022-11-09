@@ -1,5 +1,10 @@
 const Buffer = require("buffer")
 const axios = require( "axios" );
+
+/* const FormData = require("form-data");
+const Blob = require("node-blob");
+*/
+
 const { cacheAdapterEnhancer, throttleAdapterEnhancer } = require( 'axios-extensions' )
 let API_PROTO ="https://"
 //let API_ROOT = "api.bitails.net"
@@ -55,6 +60,7 @@ class Explorer {
       adapter: throttleAdapterEnhancer( cacheAdapterEnhancer( axios.defaults.adapter, cacheOpt ), throttleOpt )
     } )
 
+
     return this
   }
 
@@ -103,16 +109,22 @@ class Explorer {
   }
 
   _postBinary ( command, data ) {
-        const formData = new FormData();
-            formData.append("raw", new Blob([ data ]), 'raw');
-            const options = {
-                method: 'POST',
-                body: formData
-            };
 
-    return this._httpClient.post( command, data, options )
-      .then( this._parseResponse )
-      .catch( this._parseError )
+            const form_data = new FormData();
+            // for browser
+            form_data.append("raw", new Blob([ data ]),{type: 'raw'});
+
+             return axios({
+                method: 'post',
+                url: `https://test-api.bitails.net/tx/broadcast/multipart`,
+                headers: { 'Content-Type': 'multipart/form-data'},
+                data: form_data,
+                timeout: 100000,
+                maxBodyLength: Infinity
+            }).then( this._parseResponse )
+            .catch( this._parseError );
+
+                
   }
   /**
    * Get api status
@@ -240,7 +252,7 @@ class Explorer {
   }
 
   broadcastBinary ( txBuf ) {
-    return this._post( 'tx/broadcast/multipart', txBuf )
+    return this._postBinary( 'tx/broadcast/multipart', txBuf )
   }
 
 

@@ -1,10 +1,8 @@
 {
   "name": "bitails",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": {
-    "name": "Tomás Díaz",
-    "email": "tomas@bsv.direct",
-    "homepage": "https://bsv.direct"
+    "name": "@samooth",
   },
   "description": "A Bitails API JS Wrapper library",
   "keywords": [
@@ -18,7 +16,7 @@
     "src/*",
     "dist/*"
   ],
-  "source": "test.html",
+  "source": "src/index.js",
   "homepage": "http://github.com/samooth/bitails",
   "repository": {
     "type": "git",
