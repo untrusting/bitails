@@ -7,11 +7,11 @@ const Blob = require("node-blob");
 
 const { cacheAdapterEnhancer, throttleAdapterEnhancer } = require( 'axios-extensions' )
 let API_PROTO ="https://"
-//let API_ROOT = "api.bitails.net"
-let API_ROOT = "api.bsv.direct/e2"
-let API_MAIN = "api.bsv.direct/e2"
+let API_ROOT = "api.bitails.net"
 
-let API_TESTNET = "api.bsv.direct/test/e2"
+let API_MAIN = "api.bitails.net"
+
+let API_TESTNET = "test-api.bitails.net"
 
 class Explorer {
   /**

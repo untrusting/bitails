@@ -1,6 +1,6 @@
 {
   "name": "bitails",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "author": {
     "name": "@samooth"
   },
@@ -26,13 +26,7 @@
   "scripts": {
     "lint": "eslint --fix --ext .js src",
     "test": "NODE_ENV=test mocha",
-    "build": "rm -rf dist/** && npx parcel build index.js",
-    "build:test": "rm -rf dist/** && parcel build test.html",
-    "build2": "npx browserify src/index.js --standalone Explorer > dist/bitails.browser.js",
-    "update": "scp dist/index.js bsv.direct:/srv/www/bsv.direct/lib/bitails",
-    "update2": "scp bitails.browser.js bsv.direct:/srv/www/bsv.direct/lib/explorer.js",
-    "update:test": "scp dist/test.* bsv.direct:/srv/www/bsv.direct/lib/bitails",
-    "go:test": "npm run build:test && npm run update:test"
+    "build": "npx browserify src/index.js --standalone Bitails > dist/bitails.browser.js"
   },
   "dependencies": {
     "axios": "^0.27.2",
