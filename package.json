@@ -13,7 +13,7 @@
   ],
   "license": "Open BSV",
   "files": [
-    "index.js",
+    "index.js"
   ],
   "source": "src/index.js",
   "homepage": "http://github.com/samooth/bitails",
