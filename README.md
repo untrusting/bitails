@@ -21,7 +21,7 @@ Test net: https://test-api.bitails.net/swagger
 ---
 
 ```javascript
-npm install bitails --save
+npm install git+https://github.com/samooth/bitails
 ```
 
 ## Sample Usage
@@ -34,12 +34,12 @@ Check out these [test code](https://github.com/samooth/bitails/tree/master/test)
 - Support Cache, default is true. if you don't want cache, set option `{ enableCache: false }`
 - Support ApiKey and rate limit to 3 requests/sec without apiKey.
 ```
-  // with apiKey, no threshold
-  const woc = new Bitails( 'testnet', { apiKey: 'your api key'}  )
+  // with apiKey
+  const explorer = new Bitails( 'testnet', { apiKey: 'your api key'}  )
 ```
 ```
-  // without apiKey, threshold is 3 requests/1000ms
-  const woc = new Bitails( 'testnet' )
+  // without apiKey
+  const explorer = new Bitails( 'testnet' )
 ```
 - Support JSDoc type check.
 
