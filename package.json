@@ -1,6 +1,6 @@
 {
   "name": "bitails",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "author": {
     "name": "Tomás Díaz",
     "email": "tomas@bsv.direct",
@@ -15,20 +15,21 @@
   ],
   "license": "Open BSV",
   "files": [
-    "src/*"
+    "src/*",
+    "dist/*"
   ],
   "source": "test.html",
   "homepage": "http://github.com/samooth/bitails",
   "repository": {
     "type": "git",
-    "url": "git://github.com/bitails/bitails.git"
+    "url": "git://github.com/samooth/bitails.git"
   },
   "scripts": {
     "lint": "eslint --fix --ext .js src",
     "test": "NODE_ENV=test mocha",
-    "build": "rm -rf dist/** && parcel build index.js",
+    "build": "rm -rf dist/** && npx parcel build index.js",
     "build:test": "rm -rf dist/** && parcel build test.html",
-    "build2": "npx browserify src/index.js --standalone Explorer > bitails.browser.js",
+    "build2": "npx browserify src/index.js --standalone Explorer > dist/bitails.browser.js",
     "update": "scp dist/index.js bsv.direct:/srv/www/bsv.direct/lib/bitails",
     "update2": "scp bitails.browser.js bsv.direct:/srv/www/bsv.direct/lib/explorer.js",
     "update:test": "scp dist/test.* bsv.direct:/srv/www/bsv.direct/lib/bitails",
@@ -37,7 +38,9 @@
   "dependencies": {
     "axios": "^0.27.2",
     "axios-extensions": "^3.1.3",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "form-data": "^4.0.0",
+    "node-blob": "^0.0.2"
   },
   "devDependencies": {
     "browser-resolve": "^2.0.0",
