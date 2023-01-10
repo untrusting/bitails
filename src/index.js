@@ -5,7 +5,7 @@ const FormData = require("form-data");
 const Blob = require("node-blob");
 */
 
-const { cacheAdapterEnhancer, throttleAdapterEnhancer } = require( 'axios-extensions' )
+//const { cacheAdapterEnhancer, throttleAdapterEnhancer } = require( 'axios-extensions' )
 let API_PROTO ="https://"
 let API_ROOT = "api.bitails.net"
 
@@ -25,7 +25,7 @@ class Explorer {
     this._userAgent = opts.userAgent | opts._userAgent
     this._apiKey = opts.apiKey
     this._enableCache = ( opts.enableCache === undefined ) ? true : !!opts.enableCache
-    this.url = opts.url?opts.url:API_PROTO+API_ROOT
+    this.url = opts.url?opts.url: this._network==="main"?API_PROTO+API_MAIN:API_PROTO+API_TESTNET
     this._init()
   }
 
@@ -57,7 +57,7 @@ class Explorer {
       baseURL: `${this.url}/`,
       timeout: this._timeout,
       headers,
-      adapter: throttleAdapterEnhancer( cacheAdapterEnhancer( axios.defaults.adapter, cacheOpt ), throttleOpt )
+     // adapter: throttleAdapterEnhancer( cacheAdapterEnhancer( axios.defaults.adapter, cacheOpt ), throttleOpt )
     } )
 
 
@@ -85,6 +85,7 @@ class Explorer {
   }
 
   _get ( command, params ) {
+    console.log("GET", command, params)
     // Create query with given parameters, if applicable
     params = params || {}
 
@@ -97,7 +98,7 @@ class Explorer {
   }
 
   _post ( command, data ) {
-    console.log(this.url)
+    console.log("POST",this.url)
     const options = {
       headers: {
         'Content-Type': 'application/json'
