@@ -85,7 +85,6 @@ class Explorer {
   }
 
   _get ( command, params ) {
-    console.log("GET", command, params)
     // Create query with given parameters, if applicable
     params = params || {}
 
@@ -98,7 +97,6 @@ class Explorer {
   }
 
   _post ( command, data ) {
-    console.log("POST",this.url)
     const options = {
       headers: {
         'Content-Type': 'application/json'
