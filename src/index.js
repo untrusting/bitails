@@ -1,6 +1,6 @@
 const Buffer = require("buffer")
 const axios = require( "axios" );
-
+const FormData = require("form-data");
 /* const FormData = require("form-data");
 const Blob = require("node-blob");
 */
@@ -25,7 +25,7 @@ class Explorer {
     this._userAgent = opts.userAgent | opts._userAgent
     this._apiKey = opts.apiKey
     this._enableCache = ( opts.enableCache === undefined ) ? true : !!opts.enableCache
-
+    this.url = opts.url?opts.url:API_PROTO+API_ROOT
     this._init()
   }
 
@@ -43,18 +43,18 @@ class Explorer {
       headers[ 'User-Agent' ] = this._userAgent
     }
 
-    if ( this._apiKey ) {
+/*    if ( this._apiKey ) {
       headers[ 'bitails-api-key' ] = this._apiKey
       throttleOpt[ 'threshold' ] = 0
     } else {
       //Up to 3 requests/sec.
       // https://docs.bitails.net/#rate-limits
       throttleOpt[ 'threshold' ] = 333 //(1000/3)
-    }
+    }*/
     
-    if (this._network=="test"){ API_ROOT = API_TESTNET; }else{ API_ROOT = API_MAIN;   }
+    if (this._network=="test"){ this.url = API_PROTO+API_TESTNET; }else{ this.url = API_PROTO+API_MAIN;   }
     this._httpClient = axios.create( {
-      baseURL: `${API_PROTO}${API_ROOT}/`,
+      baseURL: `${this.url}/`,
       timeout: this._timeout,
       headers,
       adapter: throttleAdapterEnhancer( cacheAdapterEnhancer( axios.defaults.adapter, cacheOpt ), throttleOpt )
@@ -97,6 +97,7 @@ class Explorer {
   }
 
   _post ( command, data ) {
+    console.log(this.url)
     const options = {
       headers: {
         'Content-Type': 'application/json'
@@ -108,19 +109,22 @@ class Explorer {
       .catch( this._parseError )
   }
 
-  _postBinary ( command, data ) {
+  _postBinary ( command, data, url="" ) {
 
             const form_data = new FormData();
             // for browser
             form_data.append("raw", new Blob([ data ]),{type: 'raw'});
-
+            if (url===""){
+              url =`${this.url}/tx/broadcast/multipart`
+            }
              return axios({
                 method: 'post',
-                url: `https://test-api.bitails.net/tx/broadcast/multipart`,
+                url: url,
                 headers: { 'Content-Type': 'multipart/form-data'},
                 data: form_data,
                 timeout: 100000,
                 maxBodyLength: Infinity
+            
             }).then( this._parseResponse )
             .catch( this._parseError );
 

@@ -26,6 +26,7 @@
   "scripts": {
     "lint": "eslint --fix --ext .js src",
     "test": "NODE_ENV=test mocha",
+    "generate-docs": "jsdoc --configure jsdoc.json --verbose -R README.md -r dist/bitails.browser.js",
     "build": "npx browserify src/index.js --standalone Bitails > dist/bitails.browser.js"
   },
   "dependencies": {
@@ -38,6 +39,7 @@
   "devDependencies": {
     "browser-resolve": "^2.0.0",
     "chai": "^4.3.6",
+    "clean-jsdoc-theme": "^4.1.8",
     "eslint": "^8.21.0",
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-mocha": "^10.1.0",
