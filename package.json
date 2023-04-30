@@ -27,7 +27,7 @@
     "lint": "eslint --fix --ext .js src",
     "test": "NODE_ENV=test mocha",
     "generate-docs": "jsdoc --configure jsdoc.json --verbose -R README.md -r dist/bitails.browser.js",
-    "build": "npx browserify src/index.js --standalone Bitails > dist/bitails.browser.js"
+    "build": "npx browserify src/index.js --standalone Explorer > dist/explorer.browser.js"
   },
   "dependencies": {
     "axios": "^0.27.2",
