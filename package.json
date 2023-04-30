@@ -1,8 +1,8 @@
 {
   "name": "bitails",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "author": {
-    "name": "@samooth"
+    "name": "Tomás Díaz"
   },
   "description": "A Bitails API JS Wrapper library",
   "keywords": [
