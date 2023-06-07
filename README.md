@@ -1,18 +1,18 @@
 # A Bitails API JS Wrapper library for Bitcoin SV Developer
 
 
-https://bitails.net/
+https://bitails.io/
 
 ## Documentation
 
-https://docs.bitails.net/
+https://docs.bitails.io/
 
 
 The Swagger is available for both main net and test net.
 
-Main net: https://api.bitails.net/swagger
+Mainnet: https://api.bitails.io/swagger
 
-Test net: https://test-api.bitails.net/swagger
+Testnet: https://test-api.bitails.io/swagger
 
 
 
@@ -21,31 +21,13 @@ Test net: https://test-api.bitails.net/swagger
 ---
 
 ```javascript
-npm install git+https://github.com/samooth/bitails
+npm install git+https://github.com/untrusting/bitails
 ```
 
 ## Sample Usage
 
-Check out these [test code](https://github.com/samooth/bitails/tree/master/test) in JavaScript and TypeScript to get up and running quickly.
-
-## History
-
-### 0.2.0
-- Support Cache, default is true. if you don't want cache, set option `{ enableCache: false }`
-- Support ApiKey and rate limit to 3 requests/sec without apiKey.
-```
-  // with apiKey
-  const explorer = new Bitails( 'testnet', { apiKey: 'your api key'}  )
-```
-```
-  // without apiKey
-  const explorer = new Bitails( 'testnet' )
-```
-- Support JSDoc type check.
-
-### 0.1.0
-- Initate, Support all API in document.
+Check out the [quickstart](https://untrusting.github.io/bitails/example/quickstart) page to help you get started.
 
 # License
 
-It is released under the terms of the Open BSV license.
+This software is released under the terms of the Open BSV license.

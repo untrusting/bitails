@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Bitails Explorer API Quickstart</title>
+
+		<script type="text/javascript" src="../dist/bitails.min.js"></script>
+	</head>
+
+	<body>
+		<h1>Bitails Explorer API Wrapper</h1>
+		<h2 style="text-align: center;">Quickstart Guide</h2>
+
+		<hr />
+
+		<h2>Include this in the header of the HTML document</h2>
+
+		<pre class="inputCode">
+			<div id="headerCode" class="code" style="min-height: 18px;"></div>
+		</pre>
+
+		<h2>Initialization</h2>
+		<pre class="inputCode">
+			<div id="networkStatus_code" class="code">
+				// Mainnet
+				const explorer = new Explorer("main");
+
+				// Testnet
+				const explorer = new Explorer("test");
+			</div>
+		</pre>
+
+		<div id="methods" class="inputCode">
+			<pre style="white-space: pre-line; tab-size: 4;">
+				<a href="#status()">status()</a>
+
+				<a href="#chainInfo()">chainInfo()</a>
+
+				<a href="#blockHash()">blockHash()</a>
+
+				<a href="#blockHeight()">blockHeight()</a>
+
+				<a href="#blockList()">blockList(height, limit)</a>
+
+				<a href="#blockLatest()">blockLatest(hash)</a>
+
+				<a href="#blockTransactions()">blockTransactions(hash)</a>
+
+				<a href="#txHash()">txHash(hash)</a>
+
+				<a href="#downloadTx()">downloadTx(hash)</a>
+				
+				<a href="#downloadTxOut()">downloadTxOut(hash, index)</a>
+
+				<a href="#getOutputData()">getOutputData(hash, indices)</a>
+
+				<a href="#getOutputsData()">getOutputsData(hash, fromIndex, toIndex)</a>
+
+				<a href="#broadcast()">broadcast(txhex)</a>
+
+				<a href="#broadcastBinary()">broadcastBinary(txBuf)</a>
+
+				<a href="#merkleProof()">merkleProof(hash)</a>
+
+				<a href="#mempoolInfo()">mempoolInfo()</a>
+
+				<a href="#mempoolTxs()">mempoolTxs()</a>
+
+				<a href="#addressInfo()">addressInfo(address)</a>
+
+				<a href="#balance()">balance(address)</a>
+
+				<a href="#history()">history(address)</a>
+
+				<a href="#utxos()">utxos(address)</a>
+
+				<a href="#detailScriptHash()">detailScriptHash(scriptHash)</a>
+
+				<a href="#balanceScriptHash()">balanceScriptHash(scriptHash)</a>
+
+				<a href="#historyByScriptHash()">historyByScriptHash(scriptHash)</a>
+
+				<a href="#utxosByScriptHash()">utxosByScriptHash(scriptHash)</a>
+
+				<a href="#search()">search(text)</a>
+			</pre>
+		</div>
+
+		<hr />
+
+		<h2 id="status()">Network Status</h2>
+		<h3>explorer.status()</h3>
+
+		<pre class="inputCode">
+			<div class="code">
+				let stats = explorer.status().then((state) => {
+					console.log("Network Status");
+					console.table(state);
+					document.getElementById("networkStatus").innerText = JSON.stringify(state, null, '\t');
+				});
+			</div>
+		</pre>
+
+		<h2>Response:</h2>
+		<div id="networkStatus" class="code"></div>
+
+		<hr />
+
+		<h2 id="chainInfo()">Network Information</h2>
+		<h3>explorer.chainInfo()</h3>
+
+		<pre class="inputCode">
+			<div class="code">
+				let stats = explorer.chainInfo().then((info) => {
+					console.log("Network Information");
+					console.table(info);
+					document.getElementById("networkInfo").innerText = JSON.stringify(info, null, '\t');
+				});
+			</div>
+		</pre>
+
+		<h2>Response:</h2>
+		<div id="networkInfo" class="code"></div>
+
+		<hr />
+
+		<h2 id="blockHash()">Block by Hash</h2>
+		<h3>explorer.blockHash(hash)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.blockHash("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048").then((block) => {
+					console.log("Block Hash:", block.hash);
+					console.table(block);
+					document.getElementById("blockByHash").innerText = JSON.stringify(block, null, '\t');
+				});
+			</div>
+		</pre>
+
+		<h2>Response:</h2>
+		<div id="blockByHash" class="code"></div>
+
+		<hr />
+
+		<h2 id="blockHeight()">Block at Height</h2>
+		<h3>explorer.blockHeight(heightNumber)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.blockHeight(0).then((genesis) => {
+					console.log("Genesis Block Hash:", genesis.hash);
+					console.table(genesis);
+					document.getElementById("genesis").innerText = JSON.stringify(genesis, null, '\t');
+				});
+			</div>
+		</pre>
+
+		<h2>Response:</h2>
+		<div id="genesis" class="code"></div>
+
+		<hr />
+
+		<h2 id="blockList()">Block List</h2>
+		<h3>explorer.blockList(height, limit)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.blockList(0, 10).then((blockList) => {
+					console.log(blockList);
+					document.getElementById("blockList").innerText = JSON.stringify(blockList, null, '\t');
+				});
+			</div>
+		</pre>
+
+		<h2>Response:</h2>
+		<div id="blockList" class="code"></div>
+
+		<hr />
+
+		<h2 id="blockLatest()">Latest Block</h2>
+		<h3>explorer.blockLatest()</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.blockLatest().then((latest) => {
+					console.log("Latest block:", latest.hash);
+					console.log("Number of transactions: ", latest.transactionsDetails.length);
+					document.getElementById("latest").innerText = JSON.stringify(latest, null, '\t');
+					console.table(latest);
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+
+		<div id="latest" class="code"></div>
+
+		<hr />
+
+		<h2 id="blockTransactions()">Transactions in a Block</h2>
+		<h3>explorer.blockTransactions(hash)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.blockTransactions("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048").then((transactionList) => {
+					console.log(transactionList);
+					document.getElementById("transactionList").innerText = JSON.stringify(transactionList, null, '\t');
+				});
+			</div>
+		</pre>
+
+		<h2>Response:</h2>
+		<div id="transactionList" class="code"></div>
+
+		<hr />
+
+		<h2 id="txHash()">Transaction Details</h2>
+		<h3>explorer.txHash(txid)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.txHash("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098").then((txData) => {
+					console.log(txData);
+					document.getElementById("txData").innerText = JSON.stringify(txData, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="txData" class="code"></div>
+
+		<hr />
+
+		<h2 id="downloadTx()">Download a Transaction</h2>
+		<h3>explorer.downloadTx(txid)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.downloadTx("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098").then((allTxData) => {
+					console.log(allTxData);
+					document.getElementById("allTxData").innerText = JSON.stringify(allTxData, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="allTxData" class="code"></div>
+
+		<hr />
+
+		<h2 id="downloadTxOut()">Download a Transaction Output</h2>
+		<h3>explorer.downloadTxOut(txid, indice)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.downloadTxOut("d4c7a2310684e52d7fe6fec3e0083fe9a6c0decfe13be2598abf61903c6c3de3", 0).then((txOut) => {
+					console.log(txOut);
+					document.getElementById("TxOut").innerText = JSON.stringify(txOut, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="txOut" class="code"></div>
+
+		<hr />
+
+		<h2 id="getOutputData()">Get Data from a Transaction Output</h2>
+		<h3>explorer.getOutputData(txid, indice)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.getOutputData("d4c7a2310684e52d7fe6fec3e0083fe9a6c0decfe13be2598abf61903c6c3de3", 0).then((txOutData) => {
+					console.log(txOutData);
+					document.getElementById("txOutData").innerText = JSON.stringify(txOutData, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="txOutData" class="code"></div>
+
+		<hr/>
+
+		<h2 id="getOutputsData()">Get Data from Multiple Transaction Outputs</h2>
+		<h3>explorer.getOutputsData(txid, fromIndex, toIndex)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.getOutputsData("d4c7a2310684e52d7fe6fec3e0083fe9a6c0decfe13be2598abf61903c6c3de3", 0,3).then((txOutputsData) => {
+					console.log(txOutputsData);
+					document.getElementById("txOutputsData").innerText = JSON.stringify(txOutputsData, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="txOutputsData" class="code"></div>
+
+		<hr />
+
+		<h2 id="broadcast()">Broadcast</h2>
+		<h3>explorer.broadcast(txHex)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.broadcast(txHex).then((res) => {
+					console.log(res);
+				});
+			</div>
+		</pre>
+
+		<hr />
+
+		<h2 id="broadcast()">Broadcast Binary</h2>
+		<h3>explorer.broadcastBinary(txBuf)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.broadcastBinary(txBuf).then((res) => {
+					console.log(res);
+				});
+			</div>
+		</pre>
+
+		<hr />
+
+		<h2 id="merkleProof()">Merkle Proof of a Transaction</h2>
+		<h3>explorer.merkleProof(txid)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.merkleProof("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098").then((merkleProof) => {
+					console.log(merkleProof);
+					document.getElementById("merkleProof").innerText = JSON.stringify(merkleProof, null, '\t');
+				});
+			</div>
+		</pre>
+
+		<h2>Response:</h2>
+		<div id="merkleProof" class="code"></div>
+
+		<hr />
+
+		<h2 id="mempoolInfo()">Mempool Information</h2>
+		<h3>explorer.mempoolInfo()</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.mempoolInfo().then((memInfo) => {
+					console.log(memInfo);
+					document.getElementById("memInfo").innerText = JSON.stringify(memInfo, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="memInfo" class="code"></div>
+
+		<hr />
+
+		<h2 id="mempoolTxs()">Mempool Transactions</h2>
+		<h3>explorer.mempoolTxs()</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.mempoolTxs().then((memTxs) => {
+					console.log(memTxs);
+					document.getElementById("memTxs").innerText = JSON.stringify(memTxs, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="memTxs" class="code"></div>
+
+		<hr />
+
+		<h2 id="addressInfo()">Address Information</h2>
+		<h3>explorer.addressInfo(address)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.addressInfo(address).then((addrInfo) => {
+					console.log(addrInfo);
+					document.getElementById("addrInfo").innerText = JSON.stringify(addrInfo, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="addrInfo" class="code"></div>
+
+		<hr />
+
+		<h2 id="balance()">Address Balance</h2>
+		<h3>explorer.balance(address)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.addressInfo(address).then((balance) => {
+					console.log(balance);
+					document.getElementById("balance").innerText = JSON.stringify(balance, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="balance" class="code"></div>
+
+		<hr />
+
+		<h2 id="history()">Address History</h2>
+		<h3>explorer.history(address)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.history(address).then((historial) => {
+					console.log(historial);
+					document.getElementById("historial").innerText = JSON.stringify(historial, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="historial" class="code"></div>
+
+		<hr />
+
+		<h2 id="utxos()">Address UTXOs</h2>
+		<h3>explorer.utxos(address)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.utxos(address).then((historial) => {
+					console.log(utxos);
+					document.getElementById("utxos").innerText = JSON.stringify(utxos, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="utxos" class="code"></div>
+
+		<hr />
+
+		<h2 id="detailsScriptHash()">ScriptHash Details</h2>
+		<h3>explorer.detailsScriptHash(scriptHash)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.detailsScriptHash(scriptHash).then((detailsScriptHash) => {
+					console.log(detailsScriptHash);
+					document.getElementById("detailsScriptHash").innerText = JSON.stringify(detailsScriptHash, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="detailsScriptHash" class="code"></div>
+
+		<hr />
+
+		<h2 id="balanceScriptHash()">Balance of ScriptHash</h2>
+		<h3>explorer.balanceScriptHash(scriptHash)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.balanceScriptHash(scriptHash).then((balanceScriptHash) => {
+					console.log(balanceScriptHash);
+					document.getElementById("balanceScriptHash").innerText = JSON.stringify(balanceScriptHash, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="balanceScriptHash" class="code"></div>
+
+		<hr />
+
+		<h2 id="historyByScriptHash()">ScriptHash History</h2>
+		<h3>explorer.historyByScriptHash(scriptHash)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.historyByScriptHash(scriptHash).then((historialScriptHash) => {
+					console.log(historialScriptHash);
+					document.getElementById("historialScriptHash").innerText = JSON.stringify(historialScriptHash, null, '\t');
+				});
+			</div>
+		</pre>
+
+		<h2>Response:</h2>
+		<div id="scriptHashHistorial" class="code"></div>
+
+		<hr />
+
+		<h2 id="utxosByScriptHash()">UTXOs by ScriptHash</h2>
+		<h3>explorer.utxosByScriptHash(scriptHash)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.utxosByScriptHash(scriptHash).then((utxosByScriptHash) => {
+					console.log(utxosByScriptHash);
+					document.getElementById("utxosByScriptHash").innerText = JSON.stringify(utxosByScriptHash, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="utxosByScriptHash" class="code"></div>
+
+		<hr />
+
+		<h2 id="search()">Search Blockchain</h2>
+		<h3>explorer.search(query)</h3>
+		<pre class="inputCode">
+			<div class="code">
+				explorer.search("hello,world").then((ops) => {
+					console.log(ops);
+					document.getElementById("balanceScriptHash").innerText = JSON.stringify(ops.results, null, '\t');
+				});
+			</div>
+		</pre>
+		<h2>Response:</h2>
+		<div id="searchResult" class="code"></div>
+
+		<script type="text/javascript">
+			const mainAddress = "16Rcy7RYM3xkPEJr4tvUtL485Fuobi8S7o";
+			const mainScriptHash = "0c03b02d68a3590137b2cd8eed603009c809de8f5f0c72dded16e49f377c71e0";
+
+			document.addEventListener("DOMContentLoaded", (event) => {
+				const mainex = new Explorer("main");
+
+				let headerCode = (`\n<script type="text/javascript" src="../dist/index.js"></scr` + `ipt>\n\n`);
+				document.getElementById("headerCode").innerText = headerCode;
+
+				const codeBlocks = document.getElementsByClassName("inputCode");
+				Array.from(codeBlocks).forEach(codeBlock => {
+					const codeContent = codeBlock.innerHTML;
+					const numTabsToRemove = 4;
+					const tabString = '\t'.repeat(numTabsToRemove);
+					const updatedContent = codeContent.replace(new RegExp(`^${tabString}`, 'gm'), '');
+					codeBlock.innerHTML = updatedContent;
+				});
+
+				const networkMain = async (explorer) => {
+					try {
+						const networkStatus = await explorer.status();
+						document.getElementById("networkStatus").innerText = JSON.stringify(networkStatus, null, '\t');
+
+						const networkInfo = await explorer.chainInfo();
+						document.getElementById("networkInfo").innerText = JSON.stringify(networkInfo, null, '\t');
+
+						const blockByHash = await explorer.blockHash("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048");
+						document.getElementById("blockByHash").innerText = JSON.stringify(blockByHash, null, '\t');
+
+						const genesisBlock = await explorer.blockHeight(0);
+						document.getElementById("genesis").innerText = JSON.stringify(genesisBlock, null, '\t');
+
+						const latestBlock = await explorer.blockLatest();
+						document.getElementById("latest").innerText = JSON.stringify(latestBlock, null, '\t');
+
+						const blockList = await explorer.blockList(0, {
+							limit: 10
+						});
+						document.getElementById("blockList").innerText = JSON.stringify(blockList, null, '\t');
+
+						const transactionList = await explorer.blockTransactions("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048");
+						document.getElementById("transactionList").innerText = JSON.stringify(transactionList, null, '\t');
+
+						const merkleProof = await explorer.merkleProof("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098");
+						document.getElementById("merkleProof").innerText = JSON.stringify(merkleProof, null, '\t');
+
+						const txData = await explorer.txHash("0e3e2357e806b6cdb1f70b54c3a3a17b6714ee1f0e68bebb44a74b1efd512098");
+						document.getElementById("txData").innerText = JSON.stringify(txData, null, '\t');
+
+						const allTxData = await explorer.downloadTx("0f752b9b2fff1bab94c23c666183cafdbb75b925769b048b63aeef9b4293b3d6");
+						document.getElementById("allTxData").innerText = JSON.stringify(allTxData, null, '\t');
+
+						const txOut = await explorer.downloadTxOut("0f752b9b2fff1bab94c23c666183cafdbb75b925769b048b63aeef9b4293b3d6", 0);
+						document.getElementById("txOut").innerText = JSON.stringify(txOut, null, '\t');
+
+						const txOutData = await explorer.getOutputData("0f752b9b2fff1bab94c23c666183cafdbb75b925769b048b63aeef9b4293b3d6", 0);
+						document.getElementById("txOutData").innerText = JSON.stringify(txOutData, null, '\t');
+
+						const txOutputsData = await explorer.getOutputsData("0f752b9b2fff1bab94c23c666183cafdbb75b925769b048b63aeef9b4293b3d6", 0, 3);
+						document.getElementById("txOutputsData").innerText = JSON.stringify(txOutputsData, null, '\t');
+
+						const searchResult = await explorer.search("hello,world", {
+							type: 'ops',
+							from: 0,
+							limit: 10
+						});
+						document.getElementById("searchResult").innerText = JSON.stringify(searchResult, null, '\t');
+
+						const memInfo = await explorer.mempoolInfo();
+						document.getElementById("memInfo").innerText = JSON.stringify(memInfo, null, '\t');
+
+						const memTxs = await explorer.mempoolTxs();
+						document.getElementById("memTxs").innerText = JSON.stringify(memTxs, null, '\t');
+
+						const addrInfo = await explorer.addressInfo("18t6VHyC8gWqj5LjQcKoLN8v9JPY83HwYd");
+						document.getElementById("addrInfo").innerText = JSON.stringify(addrInfo, null, '\t');
+
+						const balance = await explorer.balance("18t6VHyC8gWqj5LjQcKoLN8v9JPY83HwYd");
+						document.getElementById("balance").innerText = JSON.stringify(balance, null, '\t');
+
+						const historial = await explorer.history("18t6VHyC8gWqj5LjQcKoLN8v9JPY83HwYd");
+						document.getElementById("historial").innerText = JSON.stringify(historial, null, '\t');
+
+						const utxos = await explorer.utxos(mainAddress);
+						document.getElementById("utxos").innerText = JSON.stringify(utxos, null, '\t');
+
+						const detailsScriptHash = await explorer.detailsScriptHash(mainScriptHash);
+						document.getElementById("detailsScriptHash").innerText = JSON.stringify(detailsScriptHash, null, '\t');
+
+						const scriptHashHistorial = await explorer.historyByScriptHash(mainScriptHash);
+						document.getElementById("scriptHashHistorial").innerText = JSON.stringify(scriptHashHistorial, null, '\t');
+
+						const utxosByScriptHash = await explorer.utxosByScriptHash(mainScriptHash);
+						document.getElementById("utxosByScriptHash").innerText = JSON.stringify(utxosByScriptHash, null, '\t');
+
+						const balanceSH = await explorer.balanceScriptHash(mainScriptHash);
+						document.getElementById("balanceScriptHash").innerText = JSON.stringify(balanceSH, null, '\t');
+					} catch (error) {
+						console.error("Error:", error);
+					}
+				};
+
+				networkMain(mainex, console.log);
+			});
+		</script>
+
+		<style type="text/css">
+			body {
+				font-family: monospace;
+				text-align: center;
+				max-width: 1024px;
+				margin: auto;
+				padding: 10px;
+			}
+
+			h2 {
+				text-align: left;
+				margin-left: 20px;
+			}
+
+			hr {
+				margin-top: 50px;
+				margin-bottom: 50px;
+			}
+
+			.code {
+				background: rgba(0, 0, 0, 0.8);
+				color: lime;
+				max-width: 100%;
+				min-height: 80px;
+				margin: 0;
+				margin: auto;
+				margin-top: 20px;
+				overflow-y: auto;
+				text-align: left;
+				border-radius: 10px;
+				max-height: 300px;
+				resize: none;
+				white-space: pre-wrap;
+    			tab-size: 4;
+				padding: 5px;
+			}
+		</style>
+	</body>
+</html>

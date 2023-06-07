@@ -2205,251 +2205,383 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],5:[function(require,module,exports){
-(function (process){(function (){
-"use strict";
-/**
- * @author Kuitos
- * @homepage https://github.com/kuitos/
- * @since 2017-10-12
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = require("tslib");
-var lru_cache_1 = tslib_1.__importDefault(require("lru-cache"));
-var buildSortedURL_1 = tslib_1.__importDefault(require("./utils/buildSortedURL"));
-var isCacheLike_1 = tslib_1.__importDefault(require("./utils/isCacheLike"));
-var FIVE_MINUTES = 1000 * 60 * 5;
-var CAPACITY = 100;
-function cacheAdapterEnhancer(adapter, options) {
-    var _this = this;
-    if (options === void 0) { options = {}; }
-    var _a = options.enabledByDefault, enabledByDefault = _a === void 0 ? true : _a, _b = options.cacheFlag, cacheFlag = _b === void 0 ? 'cache' : _b, _c = options.defaultCache, defaultCache = _c === void 0 ? new lru_cache_1.default({ maxAge: FIVE_MINUTES, max: CAPACITY }) : _c;
-    return function (config) {
-        var url = config.url, method = config.method, params = config.params, paramsSerializer = config.paramsSerializer, forceUpdate = config.forceUpdate;
-        var useCache = (config[cacheFlag] !== void 0 && config[cacheFlag] !== null)
-            ? config[cacheFlag]
-            : enabledByDefault;
-        if (method === 'get' && useCache) {
-            // if had provide a specified cache, then use it instead
-            var cache_1 = isCacheLike_1.default(useCache) ? useCache : defaultCache;
-            // build the index according to the url and params
-            var index_1 = buildSortedURL_1.default(url, params, paramsSerializer);
-            var responsePromise = cache_1.get(index_1);
-            if (!responsePromise || forceUpdate) {
-                responsePromise = (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-                    var reason_1;
-                    return tslib_1.__generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                _a.trys.push([0, 2, , 3]);
-                                return [4 /*yield*/, adapter(config)];
-                            case 1: return [2 /*return*/, _a.sent()];
-                            case 2:
-                                reason_1 = _a.sent();
-                                cache_1.del(index_1);
-                                throw reason_1;
-                            case 3: return [2 /*return*/];
-                        }
-                    });
-                }); })();
-                // put the promise for the non-transformed response into cache as a placeholder
-                cache_1.set(index_1, responsePromise);
-                return responsePromise;
-            }
-            /* istanbul ignore next */
-            if (process.env.LOGGER_LEVEL === 'info') {
-                // eslint-disable-next-line no-console
-                console.info("[axios-extensions] request cached by cache adapter --> url: " + index_1);
-            }
-            return responsePromise;
-        }
-        return adapter(config);
-    };
-}
-exports.default = cacheAdapterEnhancer;
+const axios = require("axios");
+const FormData = require("form-data");
 
-}).call(this)}).call(this,require('_process'))
-},{"./utils/buildSortedURL":9,"./utils/isCacheLike":10,"_process":4,"lru-cache":43,"tslib":44}],6:[function(require,module,exports){
-"use strict";
-/**
- * @author Kuitos
- * @homepage https://github.com/kuitos/
- * @since 2017-09-28
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = require("tslib");
-var lru_cache_1 = tslib_1.__importDefault(require("lru-cache"));
-exports.Cache = lru_cache_1.default;
-var cacheAdapterEnhancer_1 = tslib_1.__importDefault(require("./cacheAdapterEnhancer"));
-exports.cacheAdapterEnhancer = cacheAdapterEnhancer_1.default;
-var retryAdapterEnhancer_1 = tslib_1.__importDefault(require("./retryAdapterEnhancer"));
-exports.retryAdapterEnhancer = retryAdapterEnhancer_1.default;
-var throttleAdapterEnhancer_1 = tslib_1.__importDefault(require("./throttleAdapterEnhancer"));
-exports.throttleAdapterEnhancer = throttleAdapterEnhancer_1.default;
+let API_PROTO = "https://";
+let API_MAIN = "api.bitails.io";
+let API_TESTNET = "test-api.bitails.io";
 
-},{"./cacheAdapterEnhancer":5,"./retryAdapterEnhancer":7,"./throttleAdapterEnhancer":8,"lru-cache":43,"tslib":44}],7:[function(require,module,exports){
-(function (process){(function (){
-"use strict";
-/**
- * @author Kuitos
- * @since 2020-02-18
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = require("tslib");
-function retryAdapterEnhancer(adapter, options) {
-    var _this = this;
-    if (options === void 0) { options = {}; }
-    var _a = options.times, times = _a === void 0 ? 2 : _a;
-    return function (config) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-        var _a, retryTimes, timeUp, count, request;
-        var _this = this;
-        return tslib_1.__generator(this, function (_b) {
-            _a = config.retryTimes, retryTimes = _a === void 0 ? times : _a;
-            timeUp = false;
-            count = 0;
-            request = function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-                var e_1;
-                return tslib_1.__generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            _a.trys.push([0, 2, , 3]);
-                            return [4 /*yield*/, adapter(config)];
-                        case 1: return [2 /*return*/, _a.sent()];
-                        case 2:
-                            e_1 = _a.sent();
-                            timeUp = retryTimes === count;
-                            if (timeUp) {
-                                throw e_1;
-                            }
-                            count++;
-                            /* istanbul ignore next */
-                            if (process.env.LOGGER_LEVEL === 'info') {
-                                console.info("[axios-extensions] request start retrying --> url: " + config.url + " , time: " + count);
-                            }
-                            return [2 /*return*/, request()];
-                        case 3: return [2 /*return*/];
-                    }
-                });
-            }); };
-            return [2 /*return*/, request()];
-        });
-    }); };
-}
-exports.default = retryAdapterEnhancer;
-
-}).call(this)}).call(this,require('_process'))
-},{"_process":4,"tslib":44}],8:[function(require,module,exports){
-(function (process){(function (){
-"use strict";
-/**
- * @author Kuitos
- * @homepage https://github.com/kuitos/
- * @since 2017-10-11
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = require("tslib");
-var lru_cache_1 = tslib_1.__importDefault(require("lru-cache"));
-var buildSortedURL_1 = tslib_1.__importDefault(require("./utils/buildSortedURL"));
-function throttleAdapterEnhancer(adapter, options) {
-    var _this = this;
-    if (options === void 0) { options = {}; }
-    var _a = options.threshold, threshold = _a === void 0 ? 1000 : _a, _b = options.cache, cache = _b === void 0 ? new lru_cache_1.default({ max: 10 }) : _b;
-    var recordCacheWithRequest = function (index, config) {
-        var responsePromise = (function () { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-            var response, reason_1;
-            return tslib_1.__generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, adapter(config)];
-                    case 1:
-                        response = _a.sent();
-                        cache.set(index, {
-                            timestamp: Date.now(),
-                            value: Promise.resolve(response),
-                        });
-                        return [2 /*return*/, response];
-                    case 2:
-                        reason_1 = _a.sent();
-                        cache.del(index);
-                        throw reason_1;
-                    case 3: return [2 /*return*/];
-                }
-            });
-        }); })();
-        cache.set(index, {
-            timestamp: Date.now(),
-            value: responsePromise,
-        });
-        return responsePromise;
-    };
-    return function (config) {
-        var url = config.url, method = config.method, params = config.params, paramsSerializer = config.paramsSerializer;
-        var index = buildSortedURL_1.default(url, params, paramsSerializer);
-        var now = Date.now();
-        var cachedRecord = cache.get(index) || { timestamp: now };
-        if (method === 'get') {
-            if (now - cachedRecord.timestamp <= threshold) {
-                var responsePromise = cachedRecord.value;
-                if (responsePromise) {
-                    /* istanbul ignore next */
-                    if (process.env.LOGGER_LEVEL === 'info') {
-                        // eslint-disable-next-line no-console
-                        console.info("[axios-extensions] request cached by throttle adapter --> url: " + index);
-                    }
-                    return responsePromise;
-                }
-            }
-            return recordCacheWithRequest(index, config);
-        }
-        return adapter(config);
-    };
-}
-exports.default = throttleAdapterEnhancer;
-
-}).call(this)}).call(this,require('_process'))
-},{"./utils/buildSortedURL":9,"_process":4,"lru-cache":43,"tslib":44}],9:[function(require,module,exports){
-"use strict";
-/**
- * @author Kuitos
- * @homepage https://github.com/kuitos/
- * @since 2017-10-12
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = require("tslib");
-// @ts-ignore
-var buildURL_1 = tslib_1.__importDefault(require("axios/lib/helpers/buildURL"));
-function buildSortedURL() {
-    var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        args[_i] = arguments[_i];
+class Explorer {
+    /**
+     * Bitails API Wrapper
+     * @param {string} network Selected network: main or test
+     * @param {object} opts timeout, userAgent, apiKey and enableCache
+     */
+    constructor(network = 'main', opts = {}) {
+        this._network = (network === 'main' || network === 'mainnet' || network === 'livenet') ? 'main' : (network === 'test' || network === 'testnet') ? 'test' : 'stn';
+        this._timeout = opts.timeout || 30000;
+        this._userAgent = opts.userAgent || opts._userAgent;
+        this._apiKey = opts.apiKey;
+        this._enableCache = (opts.enableCache === undefined) ? true : !!opts.enableCache;
+        this.url = opts.url ? opts.url : this._network === "main" ? `${API_PROTO}${API_MAIN}` : `${API_PROTO}${API_TESTNET}`;
+        this._init();
     }
-    var builtURL = buildURL_1.default.apply(void 0, args);
-    var _a = builtURL.split('?'), urlPath = _a[0], queryString = _a[1];
-    if (queryString) {
-        var paramsPair = queryString.split('&');
-        return urlPath + "?" + paramsPair.sort().join('&');
+
+    _init() {
+        // Enhance the original axios adapter with throttle and cache enhancer
+        const headers = {
+            'Cache-Control': 'no-cache'
+        };
+
+        if (this._userAgent) {
+            headers['User-Agent'] = this._userAgent;
+        }
+
+        this._httpClient = axios.create({
+            baseURL: `${this.url}/`,
+            timeout: this._timeout,
+            headers
+        });
+
+        return this;
     }
-    return builtURL;
-}
-exports.default = buildSortedURL;
 
-},{"axios/lib/helpers/buildURL":29,"tslib":44}],10:[function(require,module,exports){
-"use strict";
-/**
- * @author Kuitos
- * @homepage https://github.com/kuitos/
- * @since 2018-03-19
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-function isCacheLike(cache) {
-    return !!(cache.set && cache.get && cache.del &&
-        typeof cache.get === 'function' && typeof cache.set === 'function' && typeof cache.del === 'function');
-}
-exports.default = isCacheLike;
+    _parseResponse(response) {
+        return response.data;
+    }
 
-},{}],11:[function(require,module,exports){
+    _parseError(error) {
+        if (error.response) {
+            throw new Error(JSON.stringify(error.response.data));
+        } else if (error.request) {
+            throw new Error(error.message);
+        } else {
+            throw error;
+        }
+    }
+
+    _get(command, params = {}) {
+        const options = {
+            params
+        }
+
+        return this._httpClient.get(command, options).then(this._parseResponse).catch(this._parseError);
+    }
+
+    _post(command, data) {
+        const options = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+
+        return this._httpClient.post(command, data, options).then((resp) => { return this._parseResponse(resp); }).catch(this._parseError);
+    }
+
+    _postBinary(command, data, url = "") {
+        const form_data = new FormData();
+        form_data.append("raw", new Blob([data]), { type: 'raw' });
+
+        if (url === "") {
+            url = `${this.url}/tx/broadcast/multipart`;
+        }
+
+        return axios({
+            method: 'post',
+            url: url,
+            headers: { 'Content-Type': 'multipart/form-data' },
+            data: form_data,
+            timeout: 100000,
+            maxBodyLength: Infinity
+        }).then(this._parseResponse).catch(this._parseError);
+    }
+
+    /**
+     * Get api status
+     * Simple endpoint to show API server is up and running
+     * https://docs.bitails.io/#get-api-status
+     */
+    status() {
+        return this._get('network/stats').then(result => result);
+    }
+
+    /**
+     * Get blockhain info
+     * This endpoint retrieves various state info of the chain for the selected network.
+     * https://docs.bitails.io/#chain-info
+     */
+    chainInfo() {
+        return this._get('network/info');
+    }
+
+    /**
+     * Get by hash
+     * This endpoint retrieves block details with given hash.
+     * https://docs.bitails.io/#get-block-by-hash
+     * @param {string} hash The hash of the block to retrieve
+     */
+    blockHash(hash) {
+        return this._get(`block/${hash}`);
+    }
+
+    /**
+     * Get by height
+     * This endpoint retrieves block details with given block height.
+     * https://docs.bitails.io/#get-by-height
+     * @param {number} height The height of the block to retrieve
+     */
+    blockHeight(height) {
+        return this._get(`block/height/${height}`);
+    }
+
+    /**
+     * Get latest block
+     * This endpoint retrieves latest block header details.
+     * https://docs.bitails.io/#get-latest-block
+     */
+    blockLatest() {
+        return this._get(`block/latest`);
+    }
+
+    /**
+     * Get block pages
+     * If the block has more that 1000 transactions the page URIs will be provided in the pages element when getting a block by hash or height.
+     * https://docs.bitails.io/#get-block-pages
+     * @param {string} hash The hash of the block to retrieve
+     * @param {number} page Page number
+     */
+    blockList(height, opt = { skip: 0, limit: 100, sort: 'height', order: 'asc' }) {
+        const { skip, limit, sort, order } = { ...{ skip: 0, limit: 100, sort: 'height', order: 'asc' }, ...opt };
+        return this._get(`block/list?fromHeight=${height}&skip=${skip}&limit=${limit}&sort=${sort}&order=${order}`);
+    }
+
+
+    /**
+     * Returns the transactions of a block based on the index
+     */
+    blockTransactions(hash, opt = { from: 0, limit: 10 }) {
+        return this._get(`block/${hash}/transactions?from=${opt.from}&limit=${opt.limit}`);
+    }
+
+    /**
+     * Returns the tags stats of blocks
+     *  Perdiod: 1h || 24h || 7d
+     */
+    blockTagHistogram(period = '24h', opt = {}) {
+        return this._get(`block/stats/tag/${period}/histogramblock?fromTime=${opt.from}&toTime=${opt.to}`);
+    }
+
+    /**
+     * Returns the mining stats of blocks
+     *  Perdiod: 1h || 24h || 7d 
+     */
+    blockMiningHistogram(period = '24h', opt = {}) {
+        return this._get(`block/stats/mining/${period}/histogramblock?fromTime=${opt.from}&toTime=${opt.to}`);
+    }
+
+    /**
+     * Returns the props of blocks in given period
+     *    *  Perdiod: 1h || 24h || 7d
+     */
+    blockPropsHistogram(period = '24h', opt = {}) {
+        return this._get(`block/stats/props/${period}/histogramblock?fromTime=${opt.from}&toTime=${opt.to}`);
+    }
+
+    /**
+     * Get by tx hash
+     * This endpoint retrieves transaction details with given transaction hash.
+     * In the response body, if any output hex size, exceeds 100KB then data is truncated
+     * NOTICE:A separate endpoint get raw transaction output data can be used to fetch full hex data
+     * https://docs.bitails.io/#get-by-tx-hash
+     * @param {string} hash The hash/txId of the transaction to retrieve
+     */
+    txHash(hash) {
+        return this._get(`tx/${hash}`);
+    }
+
+    /**
+     * Download raw transactions
+     * https://docs.bitails.io/#download-transaction
+     * @param {string} hash The hash/txId of the transaction to retrieve
+     */
+    downloadTx(hash) {
+        return this._get(`download/tx/${hash}`, { responseType: 'arraybuffer' });
+    }
+
+    /**
+     * Download specific transaction output
+     * https://docs.bitails.io/#download-transaction
+     * @param {string} hash The hash/txId of the transaction to retrieve
+     * @param {integer} index The index of the output to retrieve
+     */
+    downloadTxOut(hash, index) {
+        return this._get(`download/tx/${hash}/output/${index}`);
+    }
+
+    /**
+     * Broadcast transaction
+     * Broadcast transaction using this endpoint. Get txid in response or error msg from node with header content-type: text/plain.
+     * https://docs.bitails.io/#broadcast-transaction
+     * @param {string} txhex Raw transaction data in hex
+     */
+    broadcast(txhex) {
+        return this._post('tx/broadcast', {
+            raw: txhex
+        });
+    }
+
+    broadcastBinary(txBuf) {
+        return this._postBinary('tx/broadcast/multipart', txBuf);
+    }
+
+    /**
+     * Get raw transaction output data
+     * Get raw transaction vout data in hex
+     * https://docs.bitails.io/#get-raw-transaction-output-data
+     * @param {string} hash The hash/txId of the transaction
+     * @param {number} outputIndex Output index
+     */
+    getOutputData(hash, outputIndex) {
+        return this._get(`tx/${hash}/output/${outputIndex}`);
+    }
+
+
+    getOutputsData(hash, fromIndex, toIndex) {
+        return this._get(`tx/${hash}/outputs/${fromIndex}/${toIndex}`);
+    }
+
+    /**
+     * Get merkle proof
+     * This endpoint returns merkle branch to a confirmed transaction
+     * https://docs.bitails.io/#get-merkle-proof
+     * @param {string} hash The hash/txId of the transaction
+     */
+    merkleProof(hash) {
+        return this._get(`tx/${hash}/proof`);
+    }
+
+
+    /**
+     * Get mempool info
+     * This endpoint retrieves various info about the node's mempool for the selected network.
+     * https://docs.bitails.io/#get-mempool-info
+     */
+    mempoolInfo() {
+        return this._get(`mempool`);
+    }
+
+
+    /**
+     * Get mempool transactions
+     * This endpoint retrieve list of transaction ids from the node's mempool for the selected network.
+     * https://docs.bitails.io/#get-mempool-transactions
+     * 
+     */
+    mempoolTxs() {
+        return this._get(`mempool/transactions`);
+    }
+
+
+    /**
+     * Get address info
+     * This endpoint retrieves various address info.
+     * @param {string} address 
+     */
+    addressInfo(address) {
+        return this._get(`address/${address}/details`);
+    }
+
+    /**
+     * Get balance
+     * This endpoint retrieves confirmed and unconfirmed address balance.
+     * @param {string} address 
+     */
+    balance(address) {
+        return this._get(`address/${address}/balance`);
+    }
+
+    /**
+     * Get history
+     * This endpoint retrieves confirmed and unconfirmed address transactions.
+     * https://docs.bitails.io/#get-history
+     * @param {string} address 
+     */
+    history(address, pgkey = "", limit = 100, pagination = true, pagesize = 10, page = 1) {
+        let pgkeyParam = "";
+        if (pgkey != "") { pgkeyParam = `pgkey=${pgkey}&`; } else { pgkeyParam = ""; }
+
+        return this._get(`address/${address}/history?${pgkeyParam}limit=${limit}`);
+    }
+
+    /**
+     * Get unspent transactions
+     * This endpoint retrieves ordered list of UTXOs.
+     * https://docs.bitails.io/#get-unspent-transactions
+     * @param {string} address 
+     */
+    utxos(address, from = 0, limit = 100) {
+        return this._get(`address/${address}/unspent?from=${from}&limit=${limit}`);
+    }
+
+    /**
+     * Get balance of  scriptHash
+     * This endpoint retrieves balace if ScriptHash
+     * https://docs.bitails.io/#get-balance-of-scripthash
+     * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
+     */
+    balanceScriptHash(scriptHash) {
+        return this._get(`scripthash/${scriptHash}/balance`);
+    }
+    
+    /**
+     * Get scriptHash history
+     * This endpoint retrieves confirmed and unconfirmed script transactions.
+     * https://docs.bitails.io/#get-history-of-scripthash
+     * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
+     */
+    historyByScriptHash(scriptHash, pgkey = "", limit = 100, pagination = true, pagesize = 100, page = 1) {
+        let pgkeyParam = "";
+        if (pgkey != "") { pgkeyParam = `pgkey=${pgkey}&`; } else { pgkeyParam = ""; }
+        return this._get(`scripthash/${scriptHash}/history?${pgkeyParam}limit=${limit}`);
+    }
+
+    /**
+     * Get scriptHash information
+     * This endpoint retrieves information abut ScriptHash
+     * https://docs.bitails.io/#get-details-of-scripthash
+     * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
+     */
+    detailsScriptHash(scriptHash) {
+        return this._get(`scripthash/${scriptHash}/details`);
+    }
+
+    /**
+     * Get scriptHash unspent transactions
+     * This endpoint retrieves ordered list of UTXOs.
+     * https://docs.bitails.io/#get-script-unspent-transactions
+     * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
+     */
+    utxosByScriptHash(scriptHash, from = 0, limit = 100) {
+        return this._get(`scripthash/${scriptHash}/unspent?from=${from}&limit=${limit}`);
+    }
+
+    /**
+     * Get txid details links
+     * This endpoint retrieves transactions including the search parameter.
+     * https://docs.bitails.io/#Search
+     * type: all || ops || tx || block || scripthash || address
+     * @param {string} 
+     */
+    search(q, opts = { type: 'ops', from: 0, limit: 10 }) {
+        return this._get(`search?type=${opts.type}&q={${q}}&from=${opts.from}&limit=${opts.limit}`);
+    }
+}
+
+module.exports = Explorer;
+},{"axios":6,"form-data":38}],6:[function(require,module,exports){
 module.exports = require('./lib/axios');
-},{"./lib/axios":13}],12:[function(require,module,exports){
+},{"./lib/axios":8}],7:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -2673,7 +2805,7 @@ module.exports = function xhrAdapter(config) {
   });
 };
 
-},{"../cancel/CanceledError":15,"../core/AxiosError":18,"../core/buildFullPath":20,"../defaults/transitional":26,"../helpers/parseProtocol":38,"./../core/settle":23,"./../helpers/buildURL":29,"./../helpers/cookies":31,"./../helpers/isURLSameOrigin":34,"./../helpers/parseHeaders":37,"./../utils":42}],13:[function(require,module,exports){
+},{"../cancel/CanceledError":10,"../core/AxiosError":13,"../core/buildFullPath":15,"../defaults/transitional":21,"../helpers/parseProtocol":33,"./../core/settle":18,"./../helpers/buildURL":24,"./../helpers/cookies":26,"./../helpers/isURLSameOrigin":29,"./../helpers/parseHeaders":32,"./../utils":37}],8:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -2739,7 +2871,7 @@ module.exports = axios;
 // Allow use of default import syntax in TypeScript
 module.exports.default = axios;
 
-},{"../lib/core/AxiosError":18,"./cancel/CancelToken":14,"./cancel/CanceledError":15,"./cancel/isCancel":16,"./core/Axios":17,"./core/mergeConfig":22,"./defaults":25,"./env/data":27,"./helpers/bind":28,"./helpers/isAxiosError":33,"./helpers/spread":39,"./helpers/toFormData":40,"./utils":42}],14:[function(require,module,exports){
+},{"../lib/core/AxiosError":13,"./cancel/CancelToken":9,"./cancel/CanceledError":10,"./cancel/isCancel":11,"./core/Axios":12,"./core/mergeConfig":17,"./defaults":20,"./env/data":22,"./helpers/bind":23,"./helpers/isAxiosError":28,"./helpers/spread":34,"./helpers/toFormData":35,"./utils":37}],9:[function(require,module,exports){
 'use strict';
 
 var CanceledError = require('./CanceledError');
@@ -2860,7 +2992,7 @@ CancelToken.source = function source() {
 
 module.exports = CancelToken;
 
-},{"./CanceledError":15}],15:[function(require,module,exports){
+},{"./CanceledError":10}],10:[function(require,module,exports){
 'use strict';
 
 var AxiosError = require('../core/AxiosError');
@@ -2884,14 +3016,14 @@ utils.inherits(CanceledError, AxiosError, {
 
 module.exports = CanceledError;
 
-},{"../core/AxiosError":18,"../utils":42}],16:[function(require,module,exports){
+},{"../core/AxiosError":13,"../utils":37}],11:[function(require,module,exports){
 'use strict';
 
 module.exports = function isCancel(value) {
   return !!(value && value.__CANCEL__);
 };
 
-},{}],17:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3053,7 +3185,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = Axios;
 
-},{"../helpers/buildURL":29,"../helpers/validator":41,"./../utils":42,"./InterceptorManager":19,"./buildFullPath":20,"./dispatchRequest":21,"./mergeConfig":22}],18:[function(require,module,exports){
+},{"../helpers/buildURL":24,"../helpers/validator":36,"./../utils":37,"./InterceptorManager":14,"./buildFullPath":15,"./dispatchRequest":16,"./mergeConfig":17}],13:[function(require,module,exports){
 'use strict';
 
 var utils = require('../utils');
@@ -3141,7 +3273,7 @@ AxiosError.from = function(error, code, config, request, response, customProps) 
 
 module.exports = AxiosError;
 
-},{"../utils":42}],19:[function(require,module,exports){
+},{"../utils":37}],14:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3197,7 +3329,7 @@ InterceptorManager.prototype.forEach = function forEach(fn) {
 
 module.exports = InterceptorManager;
 
-},{"./../utils":42}],20:[function(require,module,exports){
+},{"./../utils":37}],15:[function(require,module,exports){
 'use strict';
 
 var isAbsoluteURL = require('../helpers/isAbsoluteURL');
@@ -3219,7 +3351,7 @@ module.exports = function buildFullPath(baseURL, requestedURL) {
   return requestedURL;
 };
 
-},{"../helpers/combineURLs":30,"../helpers/isAbsoluteURL":32}],21:[function(require,module,exports){
+},{"../helpers/combineURLs":25,"../helpers/isAbsoluteURL":27}],16:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3308,7 +3440,7 @@ module.exports = function dispatchRequest(config) {
   });
 };
 
-},{"../cancel/CanceledError":15,"../cancel/isCancel":16,"../defaults":25,"./../utils":42,"./transformData":24}],22:[function(require,module,exports){
+},{"../cancel/CanceledError":10,"../cancel/isCancel":11,"../defaults":20,"./../utils":37,"./transformData":19}],17:[function(require,module,exports){
 'use strict';
 
 var utils = require('../utils');
@@ -3410,7 +3542,7 @@ module.exports = function mergeConfig(config1, config2) {
   return config;
 };
 
-},{"../utils":42}],23:[function(require,module,exports){
+},{"../utils":37}],18:[function(require,module,exports){
 'use strict';
 
 var AxiosError = require('./AxiosError');
@@ -3437,7 +3569,7 @@ module.exports = function settle(resolve, reject, response) {
   }
 };
 
-},{"./AxiosError":18}],24:[function(require,module,exports){
+},{"./AxiosError":13}],19:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3461,7 +3593,7 @@ module.exports = function transformData(data, headers, fns) {
   return data;
 };
 
-},{"../defaults":25,"./../utils":42}],25:[function(require,module,exports){
+},{"../defaults":20,"./../utils":37}],20:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -3611,7 +3743,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 module.exports = defaults;
 
 }).call(this)}).call(this,require('_process'))
-},{"../adapters/http":12,"../adapters/xhr":12,"../core/AxiosError":18,"../helpers/normalizeHeaderName":35,"../helpers/toFormData":40,"../utils":42,"./env/FormData":36,"./transitional":26,"_process":4}],26:[function(require,module,exports){
+},{"../adapters/http":7,"../adapters/xhr":7,"../core/AxiosError":13,"../helpers/normalizeHeaderName":30,"../helpers/toFormData":35,"../utils":37,"./env/FormData":31,"./transitional":21,"_process":4}],21:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -3620,11 +3752,11 @@ module.exports = {
   clarifyTimeoutError: false
 };
 
-},{}],27:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 module.exports = {
   "version": "0.27.2"
 };
-},{}],28:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 module.exports = function bind(fn, thisArg) {
@@ -3637,7 +3769,7 @@ module.exports = function bind(fn, thisArg) {
   };
 };
 
-},{}],29:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3709,7 +3841,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
   return url;
 };
 
-},{"./../utils":42}],30:[function(require,module,exports){
+},{"./../utils":37}],25:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3725,7 +3857,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
     : baseURL;
 };
 
-},{}],31:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3780,7 +3912,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":42}],32:[function(require,module,exports){
+},{"./../utils":37}],27:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3796,7 +3928,7 @@ module.exports = function isAbsoluteURL(url) {
   return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
 };
 
-},{}],33:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3811,7 +3943,7 @@ module.exports = function isAxiosError(payload) {
   return utils.isObject(payload) && (payload.isAxiosError === true);
 };
 
-},{"./../utils":42}],34:[function(require,module,exports){
+},{"./../utils":37}],29:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3881,7 +4013,7 @@ module.exports = (
     })()
 );
 
-},{"./../utils":42}],35:[function(require,module,exports){
+},{"./../utils":37}],30:[function(require,module,exports){
 'use strict';
 
 var utils = require('../utils');
@@ -3895,11 +4027,11 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
   });
 };
 
-},{"../utils":42}],36:[function(require,module,exports){
+},{"../utils":37}],31:[function(require,module,exports){
 // eslint-disable-next-line strict
 module.exports = null;
 
-},{}],37:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 'use strict';
 
 var utils = require('./../utils');
@@ -3954,7 +4086,7 @@ module.exports = function parseHeaders(headers) {
   return parsed;
 };
 
-},{"./../utils":42}],38:[function(require,module,exports){
+},{"./../utils":37}],33:[function(require,module,exports){
 'use strict';
 
 module.exports = function parseProtocol(url) {
@@ -3962,7 +4094,7 @@ module.exports = function parseProtocol(url) {
   return match && match[1] || '';
 };
 
-},{}],39:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3991,7 +4123,7 @@ module.exports = function spread(callback) {
   };
 };
 
-},{}],40:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (Buffer){(function (){
 'use strict';
 
@@ -4067,7 +4199,7 @@ function toFormData(obj, formData) {
 module.exports = toFormData;
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"../utils":42,"buffer":2}],41:[function(require,module,exports){
+},{"../utils":37,"buffer":2}],36:[function(require,module,exports){
 'use strict';
 
 var VERSION = require('../env/data').version;
@@ -4155,7 +4287,7 @@ module.exports = {
   validators: validators
 };
 
-},{"../core/AxiosError":18,"../env/data":27}],42:[function(require,module,exports){
+},{"../core/AxiosError":13,"../env/data":22}],37:[function(require,module,exports){
 'use strict';
 
 var bind = require('./helpers/bind');
@@ -4627,1570 +4759,9 @@ module.exports = {
   isFileList: isFileList
 };
 
-},{"./helpers/bind":28}],43:[function(require,module,exports){
-'use strict'
-
-// A linked list to keep track of recently-used-ness
-const Yallist = require('yallist')
-
-const MAX = Symbol('max')
-const LENGTH = Symbol('length')
-const LENGTH_CALCULATOR = Symbol('lengthCalculator')
-const ALLOW_STALE = Symbol('allowStale')
-const MAX_AGE = Symbol('maxAge')
-const DISPOSE = Symbol('dispose')
-const NO_DISPOSE_ON_SET = Symbol('noDisposeOnSet')
-const LRU_LIST = Symbol('lruList')
-const CACHE = Symbol('cache')
-const UPDATE_AGE_ON_GET = Symbol('updateAgeOnGet')
-
-const naiveLength = () => 1
-
-// lruList is a yallist where the head is the youngest
-// item, and the tail is the oldest.  the list contains the Hit
-// objects as the entries.
-// Each Hit object has a reference to its Yallist.Node.  This
-// never changes.
-//
-// cache is a Map (or PseudoMap) that matches the keys to
-// the Yallist.Node object.
-class LRUCache {
-  constructor (options) {
-    if (typeof options === 'number')
-      options = { max: options }
-
-    if (!options)
-      options = {}
-
-    if (options.max && (typeof options.max !== 'number' || options.max < 0))
-      throw new TypeError('max must be a non-negative number')
-    // Kind of weird to have a default max of Infinity, but oh well.
-    const max = this[MAX] = options.max || Infinity
-
-    const lc = options.length || naiveLength
-    this[LENGTH_CALCULATOR] = (typeof lc !== 'function') ? naiveLength : lc
-    this[ALLOW_STALE] = options.stale || false
-    if (options.maxAge && typeof options.maxAge !== 'number')
-      throw new TypeError('maxAge must be a number')
-    this[MAX_AGE] = options.maxAge || 0
-    this[DISPOSE] = options.dispose
-    this[NO_DISPOSE_ON_SET] = options.noDisposeOnSet || false
-    this[UPDATE_AGE_ON_GET] = options.updateAgeOnGet || false
-    this.reset()
-  }
-
-  // resize the cache when the max changes.
-  set max (mL) {
-    if (typeof mL !== 'number' || mL < 0)
-      throw new TypeError('max must be a non-negative number')
-
-    this[MAX] = mL || Infinity
-    trim(this)
-  }
-  get max () {
-    return this[MAX]
-  }
-
-  set allowStale (allowStale) {
-    this[ALLOW_STALE] = !!allowStale
-  }
-  get allowStale () {
-    return this[ALLOW_STALE]
-  }
-
-  set maxAge (mA) {
-    if (typeof mA !== 'number')
-      throw new TypeError('maxAge must be a non-negative number')
-
-    this[MAX_AGE] = mA
-    trim(this)
-  }
-  get maxAge () {
-    return this[MAX_AGE]
-  }
-
-  // resize the cache when the lengthCalculator changes.
-  set lengthCalculator (lC) {
-    if (typeof lC !== 'function')
-      lC = naiveLength
-
-    if (lC !== this[LENGTH_CALCULATOR]) {
-      this[LENGTH_CALCULATOR] = lC
-      this[LENGTH] = 0
-      this[LRU_LIST].forEach(hit => {
-        hit.length = this[LENGTH_CALCULATOR](hit.value, hit.key)
-        this[LENGTH] += hit.length
-      })
-    }
-    trim(this)
-  }
-  get lengthCalculator () { return this[LENGTH_CALCULATOR] }
-
-  get length () { return this[LENGTH] }
-  get itemCount () { return this[LRU_LIST].length }
-
-  rforEach (fn, thisp) {
-    thisp = thisp || this
-    for (let walker = this[LRU_LIST].tail; walker !== null;) {
-      const prev = walker.prev
-      forEachStep(this, fn, walker, thisp)
-      walker = prev
-    }
-  }
-
-  forEach (fn, thisp) {
-    thisp = thisp || this
-    for (let walker = this[LRU_LIST].head; walker !== null;) {
-      const next = walker.next
-      forEachStep(this, fn, walker, thisp)
-      walker = next
-    }
-  }
-
-  keys () {
-    return this[LRU_LIST].toArray().map(k => k.key)
-  }
-
-  values () {
-    return this[LRU_LIST].toArray().map(k => k.value)
-  }
-
-  reset () {
-    if (this[DISPOSE] &&
-        this[LRU_LIST] &&
-        this[LRU_LIST].length) {
-      this[LRU_LIST].forEach(hit => this[DISPOSE](hit.key, hit.value))
-    }
-
-    this[CACHE] = new Map() // hash of items by key
-    this[LRU_LIST] = new Yallist() // list of items in order of use recency
-    this[LENGTH] = 0 // length of items in the list
-  }
-
-  dump () {
-    return this[LRU_LIST].map(hit =>
-      isStale(this, hit) ? false : {
-        k: hit.key,
-        v: hit.value,
-        e: hit.now + (hit.maxAge || 0)
-      }).toArray().filter(h => h)
-  }
-
-  dumpLru () {
-    return this[LRU_LIST]
-  }
-
-  set (key, value, maxAge) {
-    maxAge = maxAge || this[MAX_AGE]
-
-    if (maxAge && typeof maxAge !== 'number')
-      throw new TypeError('maxAge must be a number')
-
-    const now = maxAge ? Date.now() : 0
-    const len = this[LENGTH_CALCULATOR](value, key)
-
-    if (this[CACHE].has(key)) {
-      if (len > this[MAX]) {
-        del(this, this[CACHE].get(key))
-        return false
-      }
-
-      const node = this[CACHE].get(key)
-      const item = node.value
-
-      // dispose of the old one before overwriting
-      // split out into 2 ifs for better coverage tracking
-      if (this[DISPOSE]) {
-        if (!this[NO_DISPOSE_ON_SET])
-          this[DISPOSE](key, item.value)
-      }
-
-      item.now = now
-      item.maxAge = maxAge
-      item.value = value
-      this[LENGTH] += len - item.length
-      item.length = len
-      this.get(key)
-      trim(this)
-      return true
-    }
-
-    const hit = new Entry(key, value, len, now, maxAge)
-
-    // oversized objects fall out of cache automatically.
-    if (hit.length > this[MAX]) {
-      if (this[DISPOSE])
-        this[DISPOSE](key, value)
-
-      return false
-    }
-
-    this[LENGTH] += hit.length
-    this[LRU_LIST].unshift(hit)
-    this[CACHE].set(key, this[LRU_LIST].head)
-    trim(this)
-    return true
-  }
-
-  has (key) {
-    if (!this[CACHE].has(key)) return false
-    const hit = this[CACHE].get(key).value
-    return !isStale(this, hit)
-  }
-
-  get (key) {
-    return get(this, key, true)
-  }
-
-  peek (key) {
-    return get(this, key, false)
-  }
-
-  pop () {
-    const node = this[LRU_LIST].tail
-    if (!node)
-      return null
-
-    del(this, node)
-    return node.value
-  }
-
-  del (key) {
-    del(this, this[CACHE].get(key))
-  }
-
-  load (arr) {
-    // reset the cache
-    this.reset()
-
-    const now = Date.now()
-    // A previous serialized cache has the most recent items first
-    for (let l = arr.length - 1; l >= 0; l--) {
-      const hit = arr[l]
-      const expiresAt = hit.e || 0
-      if (expiresAt === 0)
-        // the item was created without expiration in a non aged cache
-        this.set(hit.k, hit.v)
-      else {
-        const maxAge = expiresAt - now
-        // dont add already expired items
-        if (maxAge > 0) {
-          this.set(hit.k, hit.v, maxAge)
-        }
-      }
-    }
-  }
-
-  prune () {
-    this[CACHE].forEach((value, key) => get(this, key, false))
-  }
-}
-
-const get = (self, key, doUse) => {
-  const node = self[CACHE].get(key)
-  if (node) {
-    const hit = node.value
-    if (isStale(self, hit)) {
-      del(self, node)
-      if (!self[ALLOW_STALE])
-        return undefined
-    } else {
-      if (doUse) {
-        if (self[UPDATE_AGE_ON_GET])
-          node.value.now = Date.now()
-        self[LRU_LIST].unshiftNode(node)
-      }
-    }
-    return hit.value
-  }
-}
-
-const isStale = (self, hit) => {
-  if (!hit || (!hit.maxAge && !self[MAX_AGE]))
-    return false
-
-  const diff = Date.now() - hit.now
-  return hit.maxAge ? diff > hit.maxAge
-    : self[MAX_AGE] && (diff > self[MAX_AGE])
-}
-
-const trim = self => {
-  if (self[LENGTH] > self[MAX]) {
-    for (let walker = self[LRU_LIST].tail;
-      self[LENGTH] > self[MAX] && walker !== null;) {
-      // We know that we're about to delete this one, and also
-      // what the next least recently used key will be, so just
-      // go ahead and set it now.
-      const prev = walker.prev
-      del(self, walker)
-      walker = prev
-    }
-  }
-}
-
-const del = (self, node) => {
-  if (node) {
-    const hit = node.value
-    if (self[DISPOSE])
-      self[DISPOSE](hit.key, hit.value)
-
-    self[LENGTH] -= hit.length
-    self[CACHE].delete(hit.key)
-    self[LRU_LIST].removeNode(node)
-  }
-}
-
-class Entry {
-  constructor (key, value, length, now, maxAge) {
-    this.key = key
-    this.value = value
-    this.length = length
-    this.now = now
-    this.maxAge = maxAge || 0
-  }
-}
-
-const forEachStep = (self, fn, node, thisp) => {
-  let hit = node.value
-  if (isStale(self, hit)) {
-    del(self, node)
-    if (!self[ALLOW_STALE])
-      hit = undefined
-  }
-  if (hit)
-    fn.call(thisp, hit.value, hit.key, self)
-}
-
-module.exports = LRUCache
-
-},{"yallist":46}],44:[function(require,module,exports){
-(function (global){(function (){
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */
-
-/* global global, define, System, Reflect, Promise */
-var __extends;
-var __assign;
-var __rest;
-var __decorate;
-var __param;
-var __metadata;
-var __awaiter;
-var __generator;
-var __exportStar;
-var __values;
-var __read;
-var __spread;
-var __spreadArrays;
-var __await;
-var __asyncGenerator;
-var __asyncDelegator;
-var __asyncValues;
-var __makeTemplateObject;
-var __importStar;
-var __importDefault;
-var __classPrivateFieldGet;
-var __classPrivateFieldSet;
-var __createBinding;
-(function (factory) {
-    var root = typeof global === "object" ? global : typeof self === "object" ? self : typeof this === "object" ? this : {};
-    if (typeof define === "function" && define.amd) {
-        define("tslib", ["exports"], function (exports) { factory(createExporter(root, createExporter(exports))); });
-    }
-    else if (typeof module === "object" && typeof module.exports === "object") {
-        factory(createExporter(root, createExporter(module.exports)));
-    }
-    else {
-        factory(createExporter(root));
-    }
-    function createExporter(exports, previous) {
-        if (exports !== root) {
-            if (typeof Object.create === "function") {
-                Object.defineProperty(exports, "__esModule", { value: true });
-            }
-            else {
-                exports.__esModule = true;
-            }
-        }
-        return function (id, v) { return exports[id] = previous ? previous(id, v) : v; };
-    }
-})
-(function (exporter) {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-
-    __extends = function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-
-    __assign = Object.assign || function (t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
-        }
-        return t;
-    };
-
-    __rest = function (s, e) {
-        var t = {};
-        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-            t[p] = s[p];
-        if (s != null && typeof Object.getOwnPropertySymbols === "function")
-            for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-                if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                    t[p[i]] = s[p[i]];
-            }
-        return t;
-    };
-
-    __decorate = function (decorators, target, key, desc) {
-        var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-        if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-        else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-        return c > 3 && r && Object.defineProperty(target, key, r), r;
-    };
-
-    __param = function (paramIndex, decorator) {
-        return function (target, key) { decorator(target, key, paramIndex); }
-    };
-
-    __metadata = function (metadataKey, metadataValue) {
-        if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
-    };
-
-    __awaiter = function (thisArg, _arguments, P, generator) {
-        function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-        return new (P || (P = Promise))(function (resolve, reject) {
-            function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-            function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-            function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-            step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-    };
-
-    __generator = function (thisArg, body) {
-        var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-        return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-        function verb(n) { return function (v) { return step([n, v]); }; }
-        function step(op) {
-            if (f) throw new TypeError("Generator is already executing.");
-            while (_) try {
-                if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-                if (y = 0, t) op = [op[0] & 2, t.value];
-                switch (op[0]) {
-                    case 0: case 1: t = op; break;
-                    case 4: _.label++; return { value: op[1], done: false };
-                    case 5: _.label++; y = op[1]; op = [0]; continue;
-                    case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                    default:
-                        if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                        if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                        if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                        if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                        if (t[2]) _.ops.pop();
-                        _.trys.pop(); continue;
-                }
-                op = body.call(thisArg, _);
-            } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-            if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-        }
-    };
-
-    __createBinding = function(o, m, k, k2) {
-        if (k2 === undefined) k2 = k;
-        o[k2] = m[k];
-    };
-
-    __exportStar = function (m, exports) {
-        for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) exports[p] = m[p];
-    };
-
-    __values = function (o) {
-        var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-        if (m) return m.call(o);
-        if (o && typeof o.length === "number") return {
-            next: function () {
-                if (o && i >= o.length) o = void 0;
-                return { value: o && o[i++], done: !o };
-            }
-        };
-        throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-    };
-
-    __read = function (o, n) {
-        var m = typeof Symbol === "function" && o[Symbol.iterator];
-        if (!m) return o;
-        var i = m.call(o), r, ar = [], e;
-        try {
-            while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-        }
-        catch (error) { e = { error: error }; }
-        finally {
-            try {
-                if (r && !r.done && (m = i["return"])) m.call(i);
-            }
-            finally { if (e) throw e.error; }
-        }
-        return ar;
-    };
-
-    __spread = function () {
-        for (var ar = [], i = 0; i < arguments.length; i++)
-            ar = ar.concat(__read(arguments[i]));
-        return ar;
-    };
-
-    __spreadArrays = function () {
-        for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-        for (var r = Array(s), k = 0, i = 0; i < il; i++)
-            for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-                r[k] = a[j];
-        return r;
-    };
-
-    __await = function (v) {
-        return this instanceof __await ? (this.v = v, this) : new __await(v);
-    };
-
-    __asyncGenerator = function (thisArg, _arguments, generator) {
-        if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-        var g = generator.apply(thisArg, _arguments || []), i, q = [];
-        return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i;
-        function verb(n) { if (g[n]) i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; }
-        function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }
-        function step(r) { r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r);  }
-        function fulfill(value) { resume("next", value); }
-        function reject(value) { resume("throw", value); }
-        function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
-    };
-
-    __asyncDelegator = function (o) {
-        var i, p;
-        return i = {}, verb("next"), verb("throw", function (e) { throw e; }), verb("return"), i[Symbol.iterator] = function () { return this; }, i;
-        function verb(n, f) { i[n] = o[n] ? function (v) { return (p = !p) ? { value: __await(o[n](v)), done: n === "return" } : f ? f(v) : v; } : f; }
-    };
-
-    __asyncValues = function (o) {
-        if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-        var m = o[Symbol.asyncIterator], i;
-        return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
-        function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
-        function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
-    };
-
-    __makeTemplateObject = function (cooked, raw) {
-        if (Object.defineProperty) { Object.defineProperty(cooked, "raw", { value: raw }); } else { cooked.raw = raw; }
-        return cooked;
-    };
-
-    __importStar = function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-        result["default"] = mod;
-        return result;
-    };
-
-    __importDefault = function (mod) {
-        return (mod && mod.__esModule) ? mod : { "default": mod };
-    };
-
-    __classPrivateFieldGet = function (receiver, privateMap) {
-        if (!privateMap.has(receiver)) {
-            throw new TypeError("attempted to get private field on non-instance");
-        }
-        return privateMap.get(receiver);
-    };
-
-    __classPrivateFieldSet = function (receiver, privateMap, value) {
-        if (!privateMap.has(receiver)) {
-            throw new TypeError("attempted to set private field on non-instance");
-        }
-        privateMap.set(receiver, value);
-        return value;
-    };
-
-    exporter("__extends", __extends);
-    exporter("__assign", __assign);
-    exporter("__rest", __rest);
-    exporter("__decorate", __decorate);
-    exporter("__param", __param);
-    exporter("__metadata", __metadata);
-    exporter("__awaiter", __awaiter);
-    exporter("__generator", __generator);
-    exporter("__exportStar", __exportStar);
-    exporter("__createBinding", __createBinding);
-    exporter("__values", __values);
-    exporter("__read", __read);
-    exporter("__spread", __spread);
-    exporter("__spreadArrays", __spreadArrays);
-    exporter("__await", __await);
-    exporter("__asyncGenerator", __asyncGenerator);
-    exporter("__asyncDelegator", __asyncDelegator);
-    exporter("__asyncValues", __asyncValues);
-    exporter("__makeTemplateObject", __makeTemplateObject);
-    exporter("__importStar", __importStar);
-    exporter("__importDefault", __importDefault);
-    exporter("__classPrivateFieldGet", __classPrivateFieldGet);
-    exporter("__classPrivateFieldSet", __classPrivateFieldSet);
-});
-
-}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],45:[function(require,module,exports){
-'use strict'
-module.exports = function (Yallist) {
-  Yallist.prototype[Symbol.iterator] = function* () {
-    for (let walker = this.head; walker; walker = walker.next) {
-      yield walker.value
-    }
-  }
-}
-
-},{}],46:[function(require,module,exports){
-'use strict'
-module.exports = Yallist
-
-Yallist.Node = Node
-Yallist.create = Yallist
-
-function Yallist (list) {
-  var self = this
-  if (!(self instanceof Yallist)) {
-    self = new Yallist()
-  }
-
-  self.tail = null
-  self.head = null
-  self.length = 0
-
-  if (list && typeof list.forEach === 'function') {
-    list.forEach(function (item) {
-      self.push(item)
-    })
-  } else if (arguments.length > 0) {
-    for (var i = 0, l = arguments.length; i < l; i++) {
-      self.push(arguments[i])
-    }
-  }
-
-  return self
-}
-
-Yallist.prototype.removeNode = function (node) {
-  if (node.list !== this) {
-    throw new Error('removing node which does not belong to this list')
-  }
-
-  var next = node.next
-  var prev = node.prev
-
-  if (next) {
-    next.prev = prev
-  }
-
-  if (prev) {
-    prev.next = next
-  }
-
-  if (node === this.head) {
-    this.head = next
-  }
-  if (node === this.tail) {
-    this.tail = prev
-  }
-
-  node.list.length--
-  node.next = null
-  node.prev = null
-  node.list = null
-
-  return next
-}
-
-Yallist.prototype.unshiftNode = function (node) {
-  if (node === this.head) {
-    return
-  }
-
-  if (node.list) {
-    node.list.removeNode(node)
-  }
-
-  var head = this.head
-  node.list = this
-  node.next = head
-  if (head) {
-    head.prev = node
-  }
-
-  this.head = node
-  if (!this.tail) {
-    this.tail = node
-  }
-  this.length++
-}
-
-Yallist.prototype.pushNode = function (node) {
-  if (node === this.tail) {
-    return
-  }
-
-  if (node.list) {
-    node.list.removeNode(node)
-  }
-
-  var tail = this.tail
-  node.list = this
-  node.prev = tail
-  if (tail) {
-    tail.next = node
-  }
-
-  this.tail = node
-  if (!this.head) {
-    this.head = node
-  }
-  this.length++
-}
-
-Yallist.prototype.push = function () {
-  for (var i = 0, l = arguments.length; i < l; i++) {
-    push(this, arguments[i])
-  }
-  return this.length
-}
-
-Yallist.prototype.unshift = function () {
-  for (var i = 0, l = arguments.length; i < l; i++) {
-    unshift(this, arguments[i])
-  }
-  return this.length
-}
-
-Yallist.prototype.pop = function () {
-  if (!this.tail) {
-    return undefined
-  }
-
-  var res = this.tail.value
-  this.tail = this.tail.prev
-  if (this.tail) {
-    this.tail.next = null
-  } else {
-    this.head = null
-  }
-  this.length--
-  return res
-}
-
-Yallist.prototype.shift = function () {
-  if (!this.head) {
-    return undefined
-  }
-
-  var res = this.head.value
-  this.head = this.head.next
-  if (this.head) {
-    this.head.prev = null
-  } else {
-    this.tail = null
-  }
-  this.length--
-  return res
-}
-
-Yallist.prototype.forEach = function (fn, thisp) {
-  thisp = thisp || this
-  for (var walker = this.head, i = 0; walker !== null; i++) {
-    fn.call(thisp, walker.value, i, this)
-    walker = walker.next
-  }
-}
-
-Yallist.prototype.forEachReverse = function (fn, thisp) {
-  thisp = thisp || this
-  for (var walker = this.tail, i = this.length - 1; walker !== null; i--) {
-    fn.call(thisp, walker.value, i, this)
-    walker = walker.prev
-  }
-}
-
-Yallist.prototype.get = function (n) {
-  for (var i = 0, walker = this.head; walker !== null && i < n; i++) {
-    // abort out of the list early if we hit a cycle
-    walker = walker.next
-  }
-  if (i === n && walker !== null) {
-    return walker.value
-  }
-}
-
-Yallist.prototype.getReverse = function (n) {
-  for (var i = 0, walker = this.tail; walker !== null && i < n; i++) {
-    // abort out of the list early if we hit a cycle
-    walker = walker.prev
-  }
-  if (i === n && walker !== null) {
-    return walker.value
-  }
-}
-
-Yallist.prototype.map = function (fn, thisp) {
-  thisp = thisp || this
-  var res = new Yallist()
-  for (var walker = this.head; walker !== null;) {
-    res.push(fn.call(thisp, walker.value, this))
-    walker = walker.next
-  }
-  return res
-}
-
-Yallist.prototype.mapReverse = function (fn, thisp) {
-  thisp = thisp || this
-  var res = new Yallist()
-  for (var walker = this.tail; walker !== null;) {
-    res.push(fn.call(thisp, walker.value, this))
-    walker = walker.prev
-  }
-  return res
-}
-
-Yallist.prototype.reduce = function (fn, initial) {
-  var acc
-  var walker = this.head
-  if (arguments.length > 1) {
-    acc = initial
-  } else if (this.head) {
-    walker = this.head.next
-    acc = this.head.value
-  } else {
-    throw new TypeError('Reduce of empty list with no initial value')
-  }
-
-  for (var i = 0; walker !== null; i++) {
-    acc = fn(acc, walker.value, i)
-    walker = walker.next
-  }
-
-  return acc
-}
-
-Yallist.prototype.reduceReverse = function (fn, initial) {
-  var acc
-  var walker = this.tail
-  if (arguments.length > 1) {
-    acc = initial
-  } else if (this.tail) {
-    walker = this.tail.prev
-    acc = this.tail.value
-  } else {
-    throw new TypeError('Reduce of empty list with no initial value')
-  }
-
-  for (var i = this.length - 1; walker !== null; i--) {
-    acc = fn(acc, walker.value, i)
-    walker = walker.prev
-  }
-
-  return acc
-}
-
-Yallist.prototype.toArray = function () {
-  var arr = new Array(this.length)
-  for (var i = 0, walker = this.head; walker !== null; i++) {
-    arr[i] = walker.value
-    walker = walker.next
-  }
-  return arr
-}
-
-Yallist.prototype.toArrayReverse = function () {
-  var arr = new Array(this.length)
-  for (var i = 0, walker = this.tail; walker !== null; i++) {
-    arr[i] = walker.value
-    walker = walker.prev
-  }
-  return arr
-}
-
-Yallist.prototype.slice = function (from, to) {
-  to = to || this.length
-  if (to < 0) {
-    to += this.length
-  }
-  from = from || 0
-  if (from < 0) {
-    from += this.length
-  }
-  var ret = new Yallist()
-  if (to < from || to < 0) {
-    return ret
-  }
-  if (from < 0) {
-    from = 0
-  }
-  if (to > this.length) {
-    to = this.length
-  }
-  for (var i = 0, walker = this.head; walker !== null && i < from; i++) {
-    walker = walker.next
-  }
-  for (; walker !== null && i < to; i++, walker = walker.next) {
-    ret.push(walker.value)
-  }
-  return ret
-}
-
-Yallist.prototype.sliceReverse = function (from, to) {
-  to = to || this.length
-  if (to < 0) {
-    to += this.length
-  }
-  from = from || 0
-  if (from < 0) {
-    from += this.length
-  }
-  var ret = new Yallist()
-  if (to < from || to < 0) {
-    return ret
-  }
-  if (from < 0) {
-    from = 0
-  }
-  if (to > this.length) {
-    to = this.length
-  }
-  for (var i = this.length, walker = this.tail; walker !== null && i > to; i--) {
-    walker = walker.prev
-  }
-  for (; walker !== null && i > from; i--, walker = walker.prev) {
-    ret.push(walker.value)
-  }
-  return ret
-}
-
-Yallist.prototype.splice = function (start, deleteCount /*, ...nodes */) {
-  if (start > this.length) {
-    start = this.length - 1
-  }
-  if (start < 0) {
-    start = this.length + start;
-  }
-
-  for (var i = 0, walker = this.head; walker !== null && i < start; i++) {
-    walker = walker.next
-  }
-
-  var ret = []
-  for (var i = 0; walker && i < deleteCount; i++) {
-    ret.push(walker.value)
-    walker = this.removeNode(walker)
-  }
-  if (walker === null) {
-    walker = this.tail
-  }
-
-  if (walker !== this.head && walker !== this.tail) {
-    walker = walker.prev
-  }
-
-  for (var i = 2; i < arguments.length; i++) {
-    walker = insert(this, walker, arguments[i])
-  }
-  return ret;
-}
-
-Yallist.prototype.reverse = function () {
-  var head = this.head
-  var tail = this.tail
-  for (var walker = head; walker !== null; walker = walker.prev) {
-    var p = walker.prev
-    walker.prev = walker.next
-    walker.next = p
-  }
-  this.head = tail
-  this.tail = head
-  return this
-}
-
-function insert (self, node, value) {
-  var inserted = node === self.head ?
-    new Node(value, null, node, self) :
-    new Node(value, node, node.next, self)
-
-  if (inserted.next === null) {
-    self.tail = inserted
-  }
-  if (inserted.prev === null) {
-    self.head = inserted
-  }
-
-  self.length++
-
-  return inserted
-}
-
-function push (self, item) {
-  self.tail = new Node(item, self.tail, null, self)
-  if (!self.head) {
-    self.head = self.tail
-  }
-  self.length++
-}
-
-function unshift (self, item) {
-  self.head = new Node(item, null, self.head, self)
-  if (!self.tail) {
-    self.tail = self.head
-  }
-  self.length++
-}
-
-function Node (value, prev, next, list) {
-  if (!(this instanceof Node)) {
-    return new Node(value, prev, next, list)
-  }
-
-  this.list = list
-  this.value = value
-
-  if (prev) {
-    prev.next = this
-    this.prev = prev
-  } else {
-    this.prev = null
-  }
-
-  if (next) {
-    next.prev = this
-    this.next = next
-  } else {
-    this.next = null
-  }
-}
-
-try {
-  // add if support for Symbol.iterator is present
-  require('./iterator.js')(Yallist)
-} catch (er) {}
-
-},{"./iterator.js":45}],47:[function(require,module,exports){
-const Buffer = require("buffer")
-const axios = require( "axios" );
-
-/* const FormData = require("form-data");
-const Blob = require("node-blob");
-*/
-
-const { cacheAdapterEnhancer, throttleAdapterEnhancer } = require( 'axios-extensions' )
-let API_PROTO ="https://"
-//let API_ROOT = "api.bitails.net"
-let API_ROOT = "api.bsv.direct/e2"
-let API_MAIN = "api.bsv.direct/e2"
-
-let API_TESTNET = "api.bsv.direct/test/e2"
-
-class Explorer {
-  /**
-   * Bitails API Wrapper
-   * @param {string} network Selected network: main , test or TODO:stn
-   * @param {object} opts timeout, userAgent, apiKey and enableCache
-   */
-  constructor ( network = 'main', opts = {} ) {
-    this._network = ( network === 'main' || network === 'mainnet' || network === 'livenet' ) ? 'main' : ( network === 'test' || network === 'testnet' ) ? 'test' : 'stn'
-    this._timeout = opts.timeout || 30000
-    this._userAgent = opts.userAgent | opts._userAgent
-    this._apiKey = opts.apiKey
-    this._enableCache = ( opts.enableCache === undefined ) ? true : !!opts.enableCache
-
-    this._init()
-  }
-
-  _init () {
-    // enhance the original axios adapter with throttle and cache enhancer 
-    const headers = {
-      'Cache-Control': 'no-cache'
-    }
-    const throttleOpt = {}
-    const cacheOpt = {
-      enabledByDefault: this._enableCache
-    }
-
-    if ( this._userAgent ) {
-      headers[ 'User-Agent' ] = this._userAgent
-    }
-
-    if ( this._apiKey ) {
-      headers[ 'bitails-api-key' ] = this._apiKey
-      throttleOpt[ 'threshold' ] = 0
-    } else {
-      //Up to 3 requests/sec.
-      // https://docs.bitails.net/#rate-limits
-      throttleOpt[ 'threshold' ] = 333 //(1000/3)
-    }
-    
-    if (this._network=="test"){ API_ROOT = API_TESTNET; }else{ API_ROOT = API_MAIN;   }
-    this._httpClient = axios.create( {
-      baseURL: `${API_PROTO}${API_ROOT}/`,
-      timeout: this._timeout,
-      headers,
-      adapter: throttleAdapterEnhancer( cacheAdapterEnhancer( axios.defaults.adapter, cacheOpt ), throttleOpt )
-    } )
-
-
-    return this
-  }
-
-  _parseResponse ( response ) {
-    return response.data
-  }
-
-  _parseError ( error ) {
-    if ( error.response ) {
-      // server return error
-      // console.warn( error.response.data )
-      // console.warn( error.response.status )
-      // console.warn( error.response.headers )
-      throw new Error( JSON.stringify(error.response.data ) )
-    } else if ( error.request ) {
-      // console.warn( error.message )
-      throw new Error( error.message )
-    } else {
-      // console.warn( 'Error', error )
-      throw error
-    }
-  }
-
-  _get ( command, params ) {
-    // Create query with given parameters, if applicable
-    params = params || {}
-
-    const options = {
-      params
-    }
-    return this._httpClient.get( command, options )
-      .then( this._parseResponse )
-      .catch( this._parseError )
-  }
-
-  _post ( command, data ) {
-    const options = {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }
-
-    return this._httpClient.post( command, data, options )
-      .then( this._parseResponse )
-      .catch( this._parseError )
-  }
-
-  _postBinary ( command, data ) {
-
-            const form_data = new FormData();
-            // for browser
-            form_data.append("raw", new Blob([ data ]),{type: 'raw'});
-
-             return axios({
-                method: 'post',
-                url: `https://test-api.bitails.net/tx/broadcast/multipart`,
-                headers: { 'Content-Type': 'multipart/form-data'},
-                data: form_data,
-                timeout: 100000,
-                maxBodyLength: Infinity
-            }).then( this._parseResponse )
-            .catch( this._parseError );
-
-                
-  }
-  /**
-   * Get api status
-   * Simple endpoint to show API server is up and running
-   * https://docs.bitails.net/#get-api-status
-   */
-  status () {
-    return this._get( 'network/stats' ).then( result => result )
-  }
-
-
-  /**
-   * Get blockhain info
-   * This endpoint retrieves various state info of the chain for the selected network.
-   * https://docs.bitails.net/#chain-info
-   */
-  chainInfo () {
-    return this._get( 'network/info' )
-  }
-
-
-  /**
-   * Get Circulating Supply
-   * This endpoint provides circulating supply of BSV.
-   * https://docs.bitails.net/#get-circulating-supply
-  circulatingsupply () {
-    return this._get( 'circulatingsupply' )
-  }
-   */
-
-
-
-  /**
-   * Get by hash
-   * This endpoint retrieves block details with given hash.
-   * https://docs.bitails.net/#get-block-by-hash
-   * @param {string} hash The hash of the block to retrieve
-   */
-  blockHash ( hash ) {
-    return this._get( `block/${hash}` )
-  }
-
-  /**
-   * Get by height
-   * This endpoint retrieves block details with given block height.
-   * https://docs.bitails.net/#get-by-height
-   * @param {number} height The height of the block to retrieve
-   */
-  blockHeight ( height ) {
-    return this._get( `block/height/${height}` )
-  }
-
-
-  /**
-   * Get block pages
-   * If the block has more that 1000 transactions the page URIs will be provided in the pages element when getting a block by hash or height.
-   * https://docs.bitails.net/#get-block-pages
-   * @param {string} hash The hash of the block to retrieve
-   * @param {number} page Page number
-   */
-  blockList ( height, limit ) {
-    return this._get( `block/list?fromHeight=${height}&limit=${limit}` )
-  }
-
-  /**
-   * Get latest block
-   * This endpoint retrieves latest block header details.
-   * https://docs.bitails.net/#get-latest-block
-   * @param {string} hash The hash of the block to retrieve
-   */
-  blockLatest ( hash ) {
-    return this._get( `block/latest` )
-  }
-
-  /**
-   * Get headers
-   * This endpoint retrieves last 10 block headers.
-   */
-  blockTransactions ( hash ) {
-    return this._get( `block/${hash}/transactions` )
-  }
-
-
-  /**
-   * Get by tx hash
-   * This endpoint retrieves transaction details with given transaction hash.
-   * In the response body, if any output hex size, exceeds 100KB then data is truncated
-   * NOTICE:A separate endpoint get raw transaction output data can be used to fetch full hex data
-   * https://docs.bitails.net/#get-by-tx-hash
-   * @param {string} hash The hash/txId of the transaction to retrieve
-   */
-  txHash ( hash ) {
-    return this._get( `tx/${hash}` )
-  }
-
-  /**
-   * Download raw transactions
-   * https://docs.bitails.net/#download-transaction
-   * @param {string} hash The hash/txId of the transaction to retrieve
-   */
-  downloadTx ( hash ) {
-   
-    return this._get( `download/tx/${hash}`, {responseType: 'arraybuffer'});
-  }
-  /**
-   * Download specific transaction output
-   * https://docs.bitails.net/#download-transaction
-   * @param {string} hash The hash/txId of the transaction to retrieve
-   * @param {integer} index The index of the output to retrieve
-   */
-  downloadTxOut ( hash, index ) {
-    return this._get( `download/tx/${hash}/output/${index}` )
-  }
-
-  /**
-   * Broadcast transaction
-   * Broadcast transaction using this endpoint. Get txid in response or error msg from node with header content-type: text/plain.
-   * https://docs.bitails.net/#broadcast-transaction
-   * @param {string} txhex Raw transaction data in hex
-   */
-  broadcast ( txhex ) {
-    return this._post( 'tx/broadcast', {
-      raw: txhex
-    } )
-  }
-
-  broadcastBinary ( txBuf ) {
-    return this._postBinary( 'tx/broadcast/multipart', txBuf )
-  }
-
-
-
-  /**
-   * Bulk transaction details
-   * Fetch details for multiple transactions in single request
-   * - Max 20 transactions per request
-   * https://docs.bitails.net/#bulk-transaction-details
-   * @param {Array} txidArray 
-
-  bulkTxDetails ( txidArray ) {
-    return this._post( `txs`, {
-      txids: txidArray
-    } )
-  }
-  */
-   
-
-  /**
-   * Decode transaction
-   * Decode raw transaction using this endpoint. Get json in response or error msg from node.
-   * https://docs.bitails.net/#decode-transaction
-   * @param {string} txhex Raw transaction data in hex
-   
-  decodeTx ( txhex ) {
-    return this._post( 'tx/decode', {
-      txhex
-    } )
-  }
-*/
-
-
-  /**
-   * Download receipt
-   * Download transaction receipt (PDF)
-   * https://docs.bitails.net/#download-receipt
-   * @param {string} hash The hash/txId of the transaction
-  receiptPDF ( hash ) {
-    return this._get( `https://${this._network}.Bitails.com/receipt/${hash}` )
-  }
-   */
-
-  /**
-   * Get raw transaction data
-   * Get raw transaction data in hex
-   * https://docs.bitails.net/#get-raw-transaction-data
-   * @param {string} hash The hash/txId of the transaction
-  getRawTxData ( hash ) {
-    return this._get( `tx/${hash}/hex` )
-  }
-   */
-
-
-  /**
-   * Get raw transaction output data
-   * Get raw transaction vout data in hex
-   * https://docs.bitails.net/#get-raw-transaction-output-data
-   * @param {string} hash The hash/txId of the transaction
-   * @param {number} outputIndex Output index
-   */
-  getOutputData ( hash, outputIndex ) {
-    return this._get( `tx/${hash}/output/${outputIndex}` )
-  }
-
-
-  getOutputsData ( hash, fromIndex, toIndex ) {
-    return this._get( `tx/${hash}/outputs/${fromIndex}/${toIndex}` )
-  }
-
-  /**
-   * Get merkle proof
-   * This endpoint returns merkle branch to a confirmed transaction
-   * https://docs.bitails.net/#get-merkle-proof
-   * @param {string} hash The hash/txId of the transaction
-   */
-  merkleProof ( hash ) {
-    return this._get( `tx/${hash}/proof` )
-  }
-
-
-  /**
-   * Get mempool info
-   * This endpoint retrieves various info about the node's mempool for the selected network.
-   * https://docs.bitails.net/#get-mempool-info
-   */
-  mempoolInfo () {
-    return this._get( `mempool` )
-  }
-
-
-  /**
-   * Get mempool transactions
-   * This endpoint retrieve list of transaction ids from the node's mempool for the selected network.
-   * https://docs.bitails.net/#get-mempool-transactions
-   * 
-   */
-  mempoolTxs () {
-    return this._get( `mempool/transactions` )
-  }
-
-
-  /**
-   * Get address info
-   * This endpoint retrieves various address info.
-   * @param {string} address 
-   */
-  addressInfo ( address ) {
-    return this._get( `address/${address}/details` )
-  }
-
-  /**
-   * Get balance
-   * This endpoint retrieves confirmed and unconfirmed address balance.
-   * @param {string} address 
-   */
-  balance ( address ) {
-    return this._get( `address/${address}/balance` )
-  }
-
-  /**
-   * Get history
-   * This endpoint retrieves confirmed and unconfirmed address transactions.
-   * https://docs.bitails.net/#get-history
-   * @param {string} address 
-   */
-  history ( address, pgkey="", limit=100 ) {
-    let pgkeyParam=""
-        if (pgkey!=""){  pgkeyParam=`pgkey=${pgkey}&`; }else{  pgkeyParam="";  }
-
-    return this._get( `address/${address}/history?${pgkeyParam}limit=${limit}` )
-  }
-
-  /**
-   * Get unspent transactions
-   * This endpoint retrieves ordered list of UTXOs.
-   * https://docs.bitails.net/#get-unspent-transactions
-   * @param {string} address 
-   */
-  utxos ( address, from=0, limit=100 ) {
-
-    return this._get( `address/${address}/unspent?from=${from}&limit=${limit}` )
-  }
-
-
-  /**
-   * Download statement
-   * Download address statement (PDF)
-   * https://docs.bitails.net/#download-statement
-   * @param {string} address 
-   
-  statementPDF ( address ) {
-    return this._get( `https://${this._network}.Bitails.com/statement/${address}` )
-  }
-*/
-  /**
-   * Get scriptHash information
-   * This endpoint retrieves information abut ScriptHash
-   * https://docs.bitails.net/#get-details-of-scripthash
-   * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
-   */
-  detailsScriptHash ( scriptHash ) {
-    return this._get( `scripthash/${scriptHash}/details` )
-  }
-
-  /**
-   * Get balance of  scriptHash
-   * This endpoint retrieves balace if ScriptHash
-   * https://docs.bitails.net/#get-balance-of-scripthash
-   * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
-   */
-  balanceScriptHash ( scriptHash ) {
-    return this._get( `scripthash/${scriptHash}/balance` )
-  }
-  /**
-   * Get scriptHash history
-   * This endpoint retrieves confirmed and unconfirmed script transactions.
-   * https://docs.bitails.net/#get-history-of-scripthash
-   * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
-   */
-  historyByScriptHash ( scriptHash,pgkey="", limit=5000 ) {
-    let pgkeyParam
-    if (pgkey!=""){  pgkeyParam=`pgkey=${pgkey}&`; }else{  pgkeyParam="";  }
-
-    return this._get( `scripthash/${scriptHash}/history?${pgkeyParam}limit=${limit}` )
-  }
-
-  /**
-   * Get scriptHash unspent transactions
-   * This endpoint retrieves ordered list of UTXOs.
-   * https://docs.bitails.net/#get-script-unspent-transactions
-   * @param {string} scriptHash Script hash: Sha256 hash of the binary bytes of the locking script (ScriptPubKey), expressed as a hexadecimal string.
-   */
-  utxosByScriptHash ( scriptHash ) {
-    return this._get( `scripthash/${scriptHash}/unspent` )
-  }
-
-
-  /**
-   * Fee quotes
-   * This endpoint provides fee quotes from multiple transaction processors. Each quote also contains transaction processor specific txSubmissionUrl and txStatusUrl. These unique URLs can be used to submit transactions to the selected transaction processor and check the status of the submitted transaction.
-   * https://docs.bitails.net/#merchant-api-beta
-  feeQuotes () {
-    return this._get( `https://api.whatsonchain.com/v1/bsv/main/mapi/feeQuotes` )
-  }
-   */
-
-  /**
-   * Submit transaction
-   * Submit a transaction to a specific transaction processor using the txSubmissionUrl provided with each quote in the Fee quotes response.
-   * https://docs.bitails.net/#submit-transaction
-   * @param {string} providerId Unique providerId from the Fee quotes response
-   * @param {string} rawtx Raw transaction data in hex
-  submitTx ( providerId, rawtx ) {
-    return this._post( `mapi/${providerId}/tx`, {
-      rawtx
-    } )
-  }
-   */
-
-
-  /**
-   * Transaction status
-   * Get a transaction's status from a specific transaction processor using the txStatusUrl provided with each quote in Fee quotes response.
-   * @param {string} providerId Unique providerId from the Fee quotes response
-   * @param {string} hash The hash/txId of the transaction
-  txStatus ( providerId, hash ) {
-    return this._get( `mapi/${providerId}/tx/${hash}` )
-  }
-   */
-
-
-  /**
-   * Get txid details links
-   * This endpoint retrieves transactions including the search parameter.
-   * https://docs.bitails.net/#Search
-   * @param {string} query 
-   */
-  search ( text ) {
-    return this._post( `search?q=${text}`, {
-      query
-    } )
-  }
-}
-
-module.exports = Explorer
-
-},{"axios":11,"axios-extensions":6,"buffer":2}]},{},[47])(47)
+},{"./helpers/bind":23}],38:[function(require,module,exports){
+/* eslint-env browser */
+module.exports = typeof self == 'object' ? self.FormData : window.FormData;
+
+},{}]},{},[5])(5)
 });
