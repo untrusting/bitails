@@ -14,10 +14,18 @@
 
 		<hr />
 
-		<h2>Include this in the header of the HTML document</h2>
+		<h2>Setup</h2>
 
 		<pre class="inputCode">
 			<div id="headerCode" class="code" style="min-height: 18px;"></div>
+		</pre>
+
+		<h3>or</h3>
+
+		<pre class="inputCode">
+			<div id="networkStatus_code" class="code" style="min-height: 18px;">
+				npm i git+https://github.com/untrusting/bitails
+			</div>
 		</pre>
 
 		<h2>Initialization</h2>
@@ -495,7 +503,7 @@
 			document.addEventListener("DOMContentLoaded", (event) => {
 				const mainex = new Explorer("main");
 
-				let headerCode = (`\n<script type="text/javascript" src="../dist/index.js"></scr` + `ipt>\n\n`);
+				let headerCode = (`\n<script type="text/javascript" src="https://raw.githubusercontent.com/untrusting/bitails/master/dist/bitails.min.js"></scr` + `ipt>\n\n`);
 				document.getElementById("headerCode").innerText = headerCode;
 
 				const codeBlocks = document.getElementsByClassName("inputCode");
